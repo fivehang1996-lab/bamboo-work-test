@@ -440,32 +440,41 @@ function switchTab(key) {
   var valids = CHS.map(function(c){return DATA[c.key]?DATA[c.key].valid:0;});
   var invalids = CHS.map(function(c){return DATA[c.key]?DATA[c.key].invalid:0;});
 
-  // Compare bar
+  // Compare bar — 百分比堆叠
   var cv = echarts.init(document.getElementById('ov-compare'));
   cv.setOption({
-    tooltip:{trigger:'axis',axisPointer:{type:'shadow'}},
-    legend:{data:['有效','无效'],bottom:0,textStyle:{color:'#8899aa',fontSize:11}},
+    tooltip:{trigger:'axis',axisPointer:{type:'shadow'},formatter:function(ps){return ps[0].name+'<br/>'+ps.map(function(p){return p.marker+p.seriesName+': '+(p.value).toFixed(1)+'%';}).join('<br/>');}},
+    legend:{data:['有效率','剔除率'],bottom:0,textStyle:{color:'#8899aa',fontSize:11}},
     grid:{left:2,right:8,bottom:28,top:8,containLabel:true},
     xAxis:{type:'category',data:chNames,axisLabel:{color:'#ccc',fontSize:11}},
-    yAxis:{type:'value',axisLabel:{color:'#8899aa',fontSize:10},splitLine:{lineStyle:{color:'#1e3040'}}},
+    yAxis:{type:'value',max:100,axisLabel:{color:'#8899aa',fontSize:10,formatter:'{value}%'},splitLine:{lineStyle:{color:'#1e3040'}}},
     series:[
-      {name:'有效',type:'bar',barWidth:36,data:valids.map(function(v,i){return {value:v,itemStyle:{color:green}};}),itemStyle:{borderRadius:[3,3,0,0]},label:{show:true,position:'top',color:'#ccc',fontSize:10,formatter:function(p){return p.value.toLocaleString();}}},
-      {name:'无效',type:'bar',barWidth:36,data:invalids.map(function(v,i){return {value:v,itemStyle:{color:red}};}),itemStyle:{borderRadius:[3,3,0,0]},label:{show:true,position:'top',color:'#ccc',fontSize:10,formatter:function(p){return p.value.toLocaleString();}}}
+      {name:'有效率',type:'bar',barWidth:44,stack:'x',
+       data:CHS.map(function(ch){var d=DATA[ch.key];var r=d?parseFloat(d.rate):0;return {value:r,itemStyle:{color:green}};}),
+       itemStyle:{borderRadius:[3,3,0,0]},label:{show:true,position:'inside',color:'#000',fontSize:11,formatter:function(p){return p.value>10?p.value+'%':'';}}},
+      {name:'剔除率',type:'bar',barWidth:44,stack:'x',
+       data:CHS.map(function(ch){var d=DATA[ch.key];var r=d?(100-parseFloat(d.rate)):0;return {value:r,itemStyle:{color:red}};}),
+       itemStyle:{borderRadius:[0,0,3,3]},label:{show:true,position:'inside',color:'#fff',fontSize:10,formatter:function(p){return p.value>10?p.value+'%':'';}}}
     ]
   });
 
-  // Category comparison: quality
-  function catBar(id, catKey, title){
+  // Category comparison — 命中率百分比
+  function catBar(id, catKey){
     var c = echarts.init(document.getElementById(id));
     c.setOption({
-      tooltip:{trigger:'axis',axisPointer:{type:'shadow'}},
+      tooltip:{trigger:'axis',axisPointer:{type:'shadow'},formatter:function(ps){var p=ps[0];return p.name+'<br/>命中率: '+p.value.toFixed(1)+'%';}},
       grid:{left:2,right:8,bottom:2,top:10,containLabel:true},
       xAxis:{type:'category',data:chNames,axisLabel:{color:'#ccc',fontSize:10}},
-      yAxis:{type:'value',axisLabel:{color:'#8899aa',fontSize:9},splitLine:{lineStyle:{color:'#1e3040'}}},
+      yAxis:{type:'value',axisLabel:{color:'#8899aa',fontSize:9,formatter:'{value}%'},splitLine:{lineStyle:{color:'#1e3040'}}},
       series:[{type:'bar',barWidth:30,
-        data:CHS.map(function(ch){return {value:DATA[ch.key]?DATA[ch.key].catHits[catKey]:0,itemStyle:{color:catColors[catKey]}};}),
+        data:CHS.map(function(ch){
+          var d=DATA[ch.key];
+          var hits=d?d.catHits[catKey]:0, total=d?d.total:1;
+          var pct=(hits/total*100);
+          return {value:pct,itemStyle:{color:catColors[catKey]}};
+        }),
         itemStyle:{borderRadius:[3,3,0,0]},
-        label:{show:true,position:'top',color:'#ccc',fontSize:10}
+        label:{show:true,position:'top',color:'#ccc',fontSize:10,formatter:function(p){return p.value.toFixed(1)+'%';}}
       }]
     });
   }
