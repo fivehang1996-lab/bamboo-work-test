@@ -356,8 +356,8 @@ function generateCombinedHTML(data, intervalMin) {
     </div>
     <div class="chart-row triple">
       <div class="chart-box"><h3>答题质量低 命中对比</h3><div id="ov-quality" style="height:280px;"></div></div>
-      <div class="chart-box"><h3>身份核验符合要求 命中对比</h3><div id="ov-identity" style="height:280px;"></div></div>
-      <div class="chart-box"><h3>设备甄别符合要求 命中对比</h3><div id="ov-device" style="height:280px;"></div></div>
+      <div class="chart-box"><h3>身份核验不符合要求 命中对比</h3><div id="ov-identity" style="height:280px;"></div></div>
+      <div class="chart-box"><h3>设备甄别不符合要求 命中对比</h3><div id="ov-device" style="height:280px;"></div></div>
     </div>
   </div>
 
