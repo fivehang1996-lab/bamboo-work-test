@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>《代号：搜哈》首次线下CE — 方案分析</title>
+<style>
+:root {
+  --bg: #0b0f14;
+  --surface: #161c24;
+  --text: #d5dbe3;
+  --accent: #5b9eff;
+  --green: #46c268;
+  --red: #e8483b;
+  --yellow: #e0a730;
+  --orange: #f07c3e;
+  --muted: #8895a4;
+  --border: #222830;
+  --radius: 10px;
+  --font-mono: 'JetBrains Mono','Cascadia Code','Fira Code',monospace;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  font-family: "PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  overflow: hidden;
+  height: 100vh;
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---- Top Bar ---- */
+.topbar {
+  position: fixed; top:0; left:0; right:0; z-index:200;
+  display:flex; align-items:center; justify-content:space-between;
+  padding: 14px 28px;
+  background: linear-gradient(to bottom, rgba(11,15,20,.95), transparent);
+}
+.topbar .logo { font-weight:700; font-size:.95em; color:var(--accent); letter-spacing:.04em; }
+.topbar .chapter-tag { font-size:.8em; color:var(--muted); background:var(--surface); padding:4px 12px; border-radius:99px; border:1px solid var(--border); }
+
+/* ---- Progress Bar ---- */
+.progress-wrap {
+  position: fixed; top:0; left:0; right:0; z-index:210; height:3px; background:transparent;
+}
+.progress-fill { height:100%; background:var(--accent); width:0%; transition:width .3s linear; }
+
+/* ---- Stage ---- */
+.stage { width:100vw; height:100vh; position:relative; }
+
+/* ---- Scene ---- */
+.scene {
+  position:absolute; inset:0;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  padding: 80px 60px 140px;
+  opacity:0; transform:scale(.96);
+  transition: opacity .5s ease, transform .5s ease;
+  pointer-events:none;
+}
+.scene.active { opacity:1; transform:scale(1); pointer-events:auto; }
+
+/* ---- Cards ---- */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 40px 48px;
+  max-width: 860px; width:100%;
+  margin: 8px 0;
+  box-shadow: 0 8px 32px rgba(0,0,0,.5);
+}
+.card-sm { padding:24px 32px; max-width:640px; }
+.card-accent { border-left: 3px solid var(--accent); }
+.card-red { border-left: 3px solid var(--red); }
+.card-yellow { border-left: 3px solid var(--yellow); }
+.card-green { border-left: 3px solid var(--green); }
+
+/* ---- Text ---- */
+h1 { font-size:2.6em; font-weight:800; color:#fff; letter-spacing:.02em; margin-bottom:6px; line-height:1.2; }
+h2 { font-size:1.6em; font-weight:700; color:var(--accent); margin-bottom:14px; }
+h3 { font-size:1.2em; font-weight:600; color:#e8edf3; margin-bottom:8px; }
+p { font-size:1.08em; line-height:1.75; }
+.muted { color:var(--muted); }
+.small { font-size:.88em; }
+
+.tag {
+  display:inline-block; padding:3px 10px;
+  border-radius:99px; font-size:.78em; font-weight:600;
+  margin-right:6px; margin-bottom:4px;
+}
+.tag-r { background:rgba(232,72,59,.12); color:var(--red); border:1px solid rgba(232,72,59,.25); }
+.tag-g { background:rgba(70,194,104,.12); color:var(--green); border:1px solid rgba(70,194,104,.25); }
+.tag-y { background:rgba(224,167,48,.12); color:var(--yellow); border:1px solid rgba(224,167,48,.25); }
+.tag-a { background:rgba(91,158,255,.12); color:var(--accent); border:1px solid rgba(91,158,255,.25); }
+
+/* ---- Grid ---- */
+.grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:18px; width:100%; max-width:880px; }
+.grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; width:100%; max-width:880px; }
+
+/* ---- Big Number ---- */
+.big-num { font-size:3.6em; font-weight:800; line-height:1; }
+.big-num.g { color:var(--green); }
+.big-num.r { color:var(--red); }
+.big-num.y { color:var(--yellow); }
+
+/* ---- Narration Bar (bottom subtitle) ---- */
+.narration-bar {
+  position:fixed; bottom:100px; left:50%; transform:translateX(-50%); z-index:150;
+  background:rgba(22,28,36,.92); border:1px solid var(--border);
+  border-radius:var(--radius); padding:14px 28px;
+  max-width:780px; width:90%;
+  text-align:center;
+  backdrop-filter: blur(12px);
+  opacity:0; transition:opacity .3s ease;
+}
+.narration-bar.visible { opacity:1; }
+.narration-bar .narration-text { font-size:1.1em; line-height:1.6; color:#fff; }
+.narration-bar .narration-label { font-size:.7em; color:var(--muted); letter-spacing:.08em; text-transform:uppercase; margin-bottom:6px; }
+
+/* ---- Bottom Controls ---- */
+.controls {
+  position:fixed; bottom:0; left:0; right:0; z-index:200;
+  display:flex; align-items:center; justify-content:center; gap:18px;
+  padding:20px 30px 28px;
+  background: linear-gradient(transparent, rgba(11,15,20,.96) 50%);
+}
+.btn {
+  background:rgba(255,255,255,.06); border:1px solid var(--border);
+  color:var(--text); padding:10px 20px; border-radius:8px;
+  font-size:.9em; cursor:pointer; transition:all .2s;
+  font-family:inherit;
+}
+.btn:hover { background:rgba(255,255,255,.12); border-color:var(--accent); }
+.btn:disabled { opacity:.3; cursor:default; }
+.btn-play { padding:12px 28px; font-size:1em; font-weight:600; background:rgba(91,158,255,.15); border-color:var(--accent); }
+.btn-play:hover { background:rgba(91,158,255,.25); }
+
+/* ---- Timeline dots ---- */
+.timeline-dots {
+  display:flex; gap:10px; align-items:center;
+}
+.timeline-dot {
+  width:8px; height:8px; border-radius:50%;
+  background:var(--border); transition:all .3s ease;
+}
+.timeline-dot.done { background:var(--accent); }
+.timeline-dot.current { background:var(--accent); transform:scale(1.6); box-shadow:0 0 8px rgba(91,158,255,.5); }
+
+/* ---- Chapter marker ---- */
+.chapter-marker {
+  position:absolute; top:20px; left:30px;
+  font-size:.75em; color:var(--muted); letter-spacing:.1em;
+  font-family:var(--font-mono);
+}
+
+/* ---- Animations ---- */
+@keyframes riseIn { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+@keyframes scaleIn { from { opacity:0; transform:scale(.9); } to { opacity:1; transform:scale(1); } }
+@keyframes slideLeft { from { opacity:0; transform:translateX(30px); } to { opacity:1; transform:translateX(0); } }
+@keyframes pulse { 0%,100% { transform:scale(1); } 50% { transform:scale(1.04); } }
+
+.anim-rise  { animation: riseIn .5s ease both; }
+.anim-rise-d1 { animation: riseIn .5s .1s ease both; }
+.anim-rise-d2 { animation: riseIn .5s .2s ease both; }
+.anim-rise-d3 { animation: riseIn .5s .3s ease both; }
+.anim-rise-d4 { animation: riseIn .5s .4s ease both; }
+.anim-scale { animation: scaleIn .5s ease both; }
+.anim-slide { animation: slideLeft .5s ease both; }
+.anim-pulse { animation: pulse 2s ease-in-out infinite; }
+
+/* ---- Data bar ---- */
+.bar-row { display:flex; align-items:center; gap:10px; margin:6px 0; }
+.bar-label { width:100px; text-align:right; font-size:.85em; color:var(--muted); flex-shrink:0; }
+.bar-track { flex:1; height:7px; background:var(--border); border-radius:4px; overflow:hidden; }
+.bar-fill { height:100%; border-radius:4px; width:0; transition:width 1s ease .3s; }
+
+/* ---- Table ---- */
+.table-wrap { overflow-x:auto; width:100%; max-width:880px; }
+table { width:100%; border-collapse:collapse; font-size:.9em; }
+th { text-align:left; padding:10px 14px; border-bottom:2px solid var(--border); color:var(--accent); font-weight:600; font-size:.85em; }
+td { padding:10px 14px; border-bottom:1px solid var(--border); }
+tr:hover td { background:rgba(255,255,255,.015); }
+
+/* ---- Four Box ---- */
+.four-box { display:grid; grid-template-columns:1fr 1fr; gap:16px; width:100%; max-width:880px; }
+.four-item {
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:28px; text-align:center;
+}
+.four-item .icon { font-size:2.4em; margin-bottom:8px; }
+.four-item .title { font-weight:700; font-size:1.1em; margin-bottom:4px; }
+.four-item .sub { color:var(--muted); font-size:.85em; }
+
+/* ---- Comparison ---- */
+.compare-row { display:flex; gap:20px; width:100%; max-width:880px; }
+.compare-col { flex:1; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:28px; }
+.compare-col h3 { font-size:1em; margin-bottom:12px; }
+
+/* ---- Responsive ---- */
+@media (max-width:768px) {
+  .scene { padding:50px 18px 160px; }
+  .card { padding:24px 20px; }
+  h1 { font-size:1.6em; }
+  .grid-2,.grid-3,.four-box { grid-template-columns:1fr; }
+  .compare-row { flex-direction:column; }
+  .narration-bar { bottom:120px; }
+}
+</style>
+</head>
+<body>
+
+<!-- Top Bar -->
+<div class="topbar">
+  <span class="logo">《代号：搜哈》CE方案分析</span>
+  <span class="chapter-tag" id="chapterTag">第1章</span>
+</div>
+
+<!-- Progress -->
+<div class="progress-wrap"><div class="progress-fill" id="progressFill"></div></div>
+
+<!-- Narration (subtitle) -->
+<div class="narration-bar" id="narrationBar">
+  <div class="narration-label">口播</div>
+  <div class="narration-text" id="narrationText"></div>
+</div>
+
+<!-- Timeline dots (center bottom above controls) -->
+<div style="position:fixed;bottom:88px;left:50%;transform:translateX(-50%);z-index:180;" class="timeline-dots" id="timelineDots"></div>
+
+<!-- Main Stage -->
+<main class="stage" id="stage">
+  <!-- Scenes will be injected by JS -->
+</main>
+
+<!-- Controls -->
+<nav class="controls">
+  <button class="btn" id="btnPrev" onclick="controls.prev()">⟵</button>
+  <button class="btn btn-play" id="btnPlay" onclick="controls.toggle()">▶ 播放</button>
+  <button class="btn" id="btnNext" onclick="controls.next()">⟶</button>
+  <span style="color:var(--muted);font-size:.85em;min-width:50px;text-align:center;" id="timeDisplay">00:00</span>
+</nav>
+
+<script>
+// ============================================================
+// 口播稿 + 场景数据（按 Ai好记 框架：口播稿驱动画面）
+// ============================================================
+const scenes = [
+  // Chapter 0 — 开篇
+  {
+    chapter: "开篇",
+    duration: 7,
+    narration: "这个方案，乍一看挺像样。但仔细读下来，有三个地方是空的——空的。不是写得不好，是根本没写。",
+    build: (ctx) => `
+      <div class="card card-accent anim-scale" style="text-align:center;">
+        <div style="font-size:.85em;color:var(--accent);letter-spacing:.12em;margin-bottom:14px;">首次线下CE · 研究方案分析</div>
+        <h1 style="font-size:3em;">《代号：搜哈》</h1>
+        <p style="color:var(--muted);margin-top:10px;font-size:1.15em;">轻量化搜打撤小游戏 &nbsp;|&nbsp; 18人试玩 + 座谈会深访</p>
+        <div style="margin-top:22px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+          <span class="tag tag-g">2组 × 9人</span>
+          <span class="tag tag-a">单组150分钟</span>
+          <span class="tag tag-y">1月10日执行</span>
+        </div>
+      </div>
+    `
+  },
+  {
+    chapter: "开篇",
+    duration: 6,
+    narration: "我们先说好的。这个方案有四个亮点，确实是用心了。",
+    build: (ctx) => `
+      <h2 style="text-align:center;">先看好的地方</h2>
+      <div class="four-box">
+        <div class="four-item anim-rise">
+          <div class="icon">🏆</div>
+          <div class="title">赛制 + 排名激励</div>
+          <div class="sub">6局比赛有积分、有奖励<br>参与动机拉满</div>
+        </div>
+        <div class="four-item anim-rise-d1">
+          <div class="icon">📈</div>
+          <div class="title">心流图工具</div>
+          <div class="sub">追踪单局内体验波动<br>CE里很少见</div>
+        </div>
+        <div class="four-item anim-rise-d2">
+          <div class="icon">📋</div>
+          <div class="title">排期务实</div>
+          <div class="sub">12.25定稿 → 1.16终报<br>敏捷小结2天内交付</div>
+        </div>
+        <div class="four-item anim-rise-d3">
+          <div class="icon">🔧</div>
+          <div class="title">可用性测试独立设计</div>
+          <div class="sub">新手引导有结构化观察卡<br>不靠事后回忆</div>
+        </div>
+      </div>
+    `
+  },
+  {
+    chapter: "开篇",
+    duration: 8,
+    narration: "尤其是这个四维评估框架——好不好玩、能不能玩懂、好不好看、有没有持续吸引力。这个递进逻辑很清晰，比直接问'你满意吗'有诊断性得多。",
+    build: (ctx) => `
+      <h2 style="text-align:center;">四维评估框架</h2>
+      <div class="four-box">
+        <div class="four-item anim-rise" style="border-top:3px solid var(--accent);">
+          <div class="icon">🎮</div>
+          <div class="title">好不好玩</div>
+          <div class="sub">核心循环 · 爽感 & 平衡性</div>
+        </div>
+        <div class="four-item anim-rise-d1" style="border-top:3px solid var(--green);">
+          <div class="icon">🧠</div>
+          <div class="title">能不能玩懂</div>
+          <div class="sub">学习成本 · 机制理解 & 操作便捷</div>
+        </div>
+        <div class="four-item anim-rise-d2" style="border-top:3px solid var(--yellow);">
+          <div class="icon">👁️</div>
+          <div class="title">好不好看</div>
+          <div class="sub">美术吸量 · 核心故事吸睛力</div>
+        </div>
+        <div class="four-item anim-rise-d3" style="border-top:3px solid var(--orange);">
+          <div class="icon">🔄</div>
+          <div class="title">有没有持续吸引力</div>
+          <div class="sub">心流 · 兴奋/挫折时刻 & 疲惫时间</div>
+        </div>
+      </div>
+      <div class="card card-sm card-green anim-rise-d4" style="margin-top:14px;">
+        <p style="margin:0;"><strong>亮点：</strong>可用性评估和心流评估直接指向产品优化，有落地出口，不只是"看一看"。</p>
+      </div>
+    `
+  },
+  // Chapter 1 — 硬伤
+  {
+    chapter: "第1章·硬伤",
+    duration: 9,
+    narration: "好，亮点说完了。现在来看问题。第一个，也是最致命的一个——测试对象，完全空白。方案第三节，只有标题，没有内容。",
+    build: (ctx) => `
+      <h2>硬伤一：测试对象完全缺失</h2>
+      <div class="card card-red anim-scale" style="text-align:center;">
+        <div class="big-num r anim-pulse" style="margin-bottom:8px;">第三节 = 空白</div>
+        <p style="font-size:1.2em;">招募什么人？核心玩家 / 泛用户 / 竞品用户？<br>玩过什么游戏？什么设备？</p>
+      </div>
+      <div class="card card-sm anim-rise-d2" style="margin-top:14px;background:rgba(232,72,59,.06);">
+        <p style="margin:0;"><strong>对搜打撤品类，至少需要区分：</strong><br>
+        是否玩过《暗区突围》《地铁逃生》等同类竞品。<br>
+        有无搜打撤经验，直接决定了「能不能玩懂」的基线。</p>
+      </div>
+    `
+  },
+  {
+    chapter: "第1章·硬伤",
+    duration: 8,
+    narration: "没有找人标准，研究就没有地基。你花两天执行、一周写报告，最后人家问'你测的是谁'——你答不上来。这一条，P0。",
+    build: (ctx) => `
+      <div class="card card-red anim-scale" style="text-align:center;">
+        <div style="font-size:1.1em;color:var(--red);font-weight:700;letter-spacing:.06em;margin-bottom:12px;">P0 — 必须补，否则方案无效</div>
+        <div style="display:flex;align-items:center;justify-content:center;gap:30px;flex-wrap:wrap;">
+          <div style="text-align:center;" class="anim-rise">
+            <div style="font-size:2em;margin-bottom:4px;">❓</div>
+            <div style="color:var(--muted);">核心 vs 泛用户？</div>
+          </div>
+          <div style="text-align:center;" class="anim-rise-d1">
+            <div style="font-size:2em;margin-bottom:4px;">❓</div>
+            <div style="color:var(--muted);">竞品经验有/无？</div>
+          </div>
+          <div style="text-align:center;" class="anim-rise-d2">
+            <div style="font-size:2em;margin-bottom:4px;">❓</div>
+            <div style="color:var(--muted);">什么设备？什么年龄段？</div>
+          </div>
+        </div>
+      </div>
+    `
+  },
+  {
+    chapter: "第1章·硬伤",
+    duration: 9,
+    narration: "第二个硬伤，研究思路也是空的。第五节，同样只有标题。只写了'测什么'，没写'怎么判断好坏'——这就是执行框架和研究方案的区别。",
+    build: (ctx) => `
+      <h2>硬伤二：研究思路缺失</h2>
+      <div class="compare-row">
+        <div class="compare-col anim-rise" style="border-top:3px solid var(--green);">
+          <h3 style="color:var(--green);">现在有</h3>
+          <ul style="list-style:none;padding:0;">
+            <li style="padding:6px 0;">✅ 核心循环体验评估</li>
+            <li style="padding:6px 0;">✅ 学习成本摸底</li>
+            <li style="padding:6px 0;">✅ UI/UE 可用性</li>
+            <li style="padding:6px 0;">✅ 心流与吸引力</li>
+            <li style="padding:6px 0;">✅ 吸量度摸底</li>
+          </ul>
+        </div>
+        <div class="compare-col anim-rise-d1" style="border-top:3px solid var(--red);">
+          <h3 style="color:var(--red);">缺失</h3>
+          <ul style="list-style:none;padding:0;">
+            <li style="padding:6px 0;color:var(--red);">❌ 各维度用什么指标判断好坏？</li>
+            <li style="padding:6px 0;color:var(--red);">❌ 观察数据 / 问卷 / 访谈怎么 triangulate？</li>
+            <li style="padding:6px 0;color:var(--red);">❌ 不同玩家类型怎么对比分析？</li>
+            <li style="padding:6px 0;color:var(--red);">❌ 什么结果算"通过"、什么算"需改进"？</li>
+          </ul>
+        </div>
+      </div>
+    `
+  },
+  {
+    chapter: "第1章·硬伤",
+    duration: 8,
+    narration: "第三个硬伤，五个附件——访谈大纲、线下问卷、可用性测试卡、心流图、问题清单——全部不在PDF里。严格来说，这份PDF只完成了百分之五十的方案工作。",
+    build: (ctx) => `
+      <h2>硬伤三：五个附件全都不在PDF里</h2>
+      <div class="card card-red anim-scale">
+        <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;">
+          <div class="anim-rise" style="background:rgba(255,255,255,.03);padding:16px 20px;border-radius:8px;text-align:center;">
+            <div style="font-size:1.6em;">📝</div>
+            <div style="font-size:.9em;">访谈大纲</div>
+          </div>
+          <div class="anim-rise-d1" style="background:rgba(255,255,255,.03);padding:16px 20px;border-radius:8px;text-align:center;">
+            <div style="font-size:1.6em;">📋</div>
+            <div style="font-size:.9em;">线下问卷</div>
+          </div>
+          <div class="anim-rise-d2" style="background:rgba(255,255,255,.03);padding:16px 20px;border-radius:8px;text-align:center;">
+            <div style="font-size:1.6em;">🔧</div>
+            <div style="font-size:.9em;">可用性测试卡</div>
+          </div>
+          <div class="anim-rise-d3" style="background:rgba(255,255,255,.03);padding:16px 20px;border-radius:8px;text-align:center;">
+            <div style="font-size:1.6em;">📈</div>
+            <div style="font-size:.9em;">心流图</div>
+          </div>
+          <div class="anim-rise-d4" style="background:rgba(255,255,255,.03);padding:16px 20px;border-radius:8px;text-align:center;">
+            <div style="font-size:1.6em;">❓</div>
+            <div style="font-size:.9em;">问题清单</div>
+          </div>
+        </div>
+        <p style="text-align:center;margin-top:18px;font-size:1.1em;">→ 没有访谈大纲和问题清单<br><strong style="color:var(--red);">访谈质量完全依赖主持人临场发挥</strong></p>
+      </div>
+    `
+  },
+  // Chapter 2 — 中等风险
+  {
+    chapter: "第2章·风险",
+    duration: 7,
+    narration: "除了硬伤，还有三个中等风险。注意——这几个不是错，但不管的话，执行时会翻车。",
+    build: (ctx) => `
+      <h2>三个中等风险</h2>
+      <div class="grid-3" style="margin-top:8px;">
+        <div class="four-item anim-rise" style="border-top:3px solid var(--yellow);">
+          <div class="icon">🎲</div>
+          <div class="title">样本 vs 排名信效度</div>
+          <div class="sub">9人排名赛，搜打撤高随机性——<br>排名可能靠运气不是能力</div>
+          <div class="bar-row" style="margin-top:10px;"><div class="bar-track"><div class="bar-fill" style="width:30%;background:var(--red);"></div></div></div>
+        </div>
+        <div class="four-item anim-rise-d1" style="border-top:3px solid var(--yellow);">
+          <div class="icon">⏱️</div>
+          <div class="title">150分钟塞太满</div>
+          <div class="sub">教程+6局+局外+访谈→<br>大概率超时</div>
+          <div class="bar-row" style="margin-top:10px;"><div class="bar-track"><div class="bar-fill" style="width:20%;background:var(--yellow);"></div></div></div>
+        </div>
+        <div class="four-item anim-rise-d2" style="border-top:3px solid var(--yellow);">
+          <div class="icon">🎯</div>
+          <div class="title">比赛 vs 自然行为</div>
+          <div class="sub">有排名+奖品→"最优打法"<br>不是自然玩法</div>
+          <div class="bar-row" style="margin-top:10px;"><div class="bar-track"><div class="bar-fill" style="width:40%;background:var(--orange);"></div></div></div>
+        </div>
+      </div>
+    `
+  },
+  {
+    chapter: "第2章·风险",
+    duration: 8,
+    narration: "这里最容易踩坑的是那个排名分。9人搜打撤，同一个人打三局可能排名差五个位次。如果有人在报告里用排名去做相关性分析——'排名低的玩家满意度也低'——那结论就是靠不住的。排名只能当激励工具，不能当研究数据。",
+    build: (ctx) => `
+      <div class="card card-yellow anim-scale">
+        <h3 style="color:var(--yellow);">排名分 ≠ 研究数据</h3>
+        <div class="compare-row" style="margin-top:16px;">
+          <div class="compare-col anim-rise" style="border-top:3px solid var(--green);text-align:center;">
+            <div style="font-size:2em;margin-bottom:4px;">✅</div>
+            <div style="font-weight:600;">激励工具</div>
+            <div style="color:var(--muted);font-size:.85em;">京东卡驱动认真参与<br>提高测试效度</div>
+          </div>
+          <div class="compare-col anim-rise-d1" style="border-top:3px solid var(--red);text-align:center;">
+            <div style="font-size:2em;margin-bottom:4px;">❌</div>
+            <div style="font-weight:600;">研究数据</div>
+            <div style="color:var(--muted);font-size:.85em;">9人样本 + 高随机性品类<br>排名相关性不可靠</div>
+          </div>
+        </div>
+        <p style="text-align:center;margin-top:14px;font-size:.9em;color:var(--muted);">建议：方案里明文加一句——排名仅用于现场激励，不纳入研究结论。</p>
+      </div>
+    `
+  },
+  {
+    chapter: "第2章·风险",
+    duration: 6,
+    narration: "150分钟的问题也一样。教程加热手加六局比赛加局外养成加组队沟通加座谈深访——你算算。要么砍到四局，要么多留半小时buffer。",
+    build: (ctx) => `
+      <div class="card card-yellow anim-scale">
+        <h3 style="color:var(--yellow);">时间预算 = 超时预告</h3>
+        <div class="bar-row" style="margin-top:16px;"><span class="bar-label" style="width:auto;min-width:80px;">教程+热手</span><div class="bar-track"><div class="bar-fill" style="width:12%;background:var(--accent);"></div></div><span style="font-size:.8em;color:var(--muted);">~15min</span></div>
+        <div class="bar-row"><span class="bar-label" style="width:auto;min-width:80px;">6局比赛</span><div class="bar-track"><div class="bar-fill" style="width:40%;background:var(--accent);"></div></div><span style="font-size:.8em;color:var(--muted);">~60min</span></div>
+        <div class="bar-row"><span class="bar-label" style="width:auto;min-width:80px;">局外+组队沟通</span><div class="bar-track"><div class="bar-fill" style="width:15%;background:var(--accent);"></div></div><span style="font-size:.8em;color:var(--muted);">~20min</span></div>
+        <div class="bar-row"><span class="bar-label" style="width:auto;min-width:80px;">座谈深访</span><div class="bar-track"><div class="bar-fill" style="width:30%;background:var(--accent);"></div></div><span style="font-size:.8em;color:var(--muted);">~45min</span></div>
+        <div class="bar-row"><span class="bar-label" style="width:auto;min-width:80px;"><strong>总计</strong></span><div class="bar-track"><div class="bar-fill" style="width:97%;background:var(--red);"></div></div><span style="font-size:.8em;color:var(--red);"><strong>≈140min — 只剩10分钟余量</strong></span></div>
+      </div>
+    `
+  },
+  // Chapter 3 — 建议
+  {
+    chapter: "第3章·建议",
+    duration: 9,
+    narration: "OK，问题说完了。那怎么补？按优先级来——两个P0必须立刻补，两个P1执行前补，两个P2锦上添花。",
+    build: (ctx) => `
+      <h2>优先级补全计划</h2>
+      <div class="table-wrap anim-scale">
+        <table>
+          <thead><tr><th style="width:50px;">优先级</th><th>补什么</th><th style="width:220px;">为什么</th></tr></thead>
+          <tbody>
+            <tr class="anim-rise"><td><span class="tag tag-r">P0</span></td><td><strong>测试对象招募条件</strong></td><td style="color:var(--muted);">没有找人标准，研究无地基</td></tr>
+            <tr class="anim-rise-d1"><td><span class="tag tag-r">P0</span></td><td><strong>座谈会问题清单 / 访谈大纲</strong></td><td style="color:var(--muted);">没有提纲，深访靠运气</td></tr>
+            <tr class="anim-rise-d2"><td><span class="tag tag-y">P1</span></td><td><strong>研究思路 / 分析框架</strong></td><td style="color:var(--muted);">只写了"测什么"，没写"怎么判断好坏"</td></tr>
+            <tr class="anim-rise-d3"><td><span class="tag tag-y">P1</span></td><td><strong>观察记录方案</strong></td><td style="color:var(--muted);">18人同时玩，谁观察？录屏还是现场？</td></tr>
+            <tr class="anim-rise-d4"><td><span class="tag tag-a">P2</span></td><td>时间 buffer 方案</td><td style="color:var(--muted);">建议降为4局或预留+30分钟</td></tr>
+            <tr><td><span class="tag tag-a">P2</span></td><td>排名数据用途声明</td><td style="color:var(--muted);">明确排名仅用于激励，不用于结论</td></tr>
+          </tbody>
+        </table>
+      </div>
+    `
+  },
+  // Chapter 4 — 总评
+  {
+    chapter: "总结",
+    duration: 10,
+    narration: "最后打个分。这个方案，骨架可以打八十分——四维框架、赛制激励、心流图，都是加分项。但完成度只能打五十分，因为三块关键内容是空的。补上，是个好方案；不补，落不了地。",
+    build: (ctx) => `
+      <h2 style="text-align:center;">总评</h2>
+      <div class="card anim-scale" style="text-align:center;">
+        <div style="display:flex;align-items:center;justify-content:center;gap:50px;flex-wrap:wrap;margin:20px 0;">
+          <div class="anim-rise" style="text-align:center;">
+            <div class="big-num g">4</div>
+            <div style="color:var(--muted);font-size:.9em;">亮点</div>
+          </div>
+          <div class="anim-rise-d1" style="text-align:center;">
+            <div class="big-num r">3</div>
+            <div style="color:var(--muted);font-size:.9em;">硬伤</div>
+          </div>
+          <div class="anim-rise-d2" style="text-align:center;">
+            <div class="big-num y">50<span style="font-size:.5em;">%</span></div>
+            <div style="color:var(--muted);font-size:.9em;">方案完成度</div>
+          </div>
+        </div>
+      </div>
+      <div class="card card-sm card-accent anim-rise-d3" style="text-align:center;margin-top:14px;">
+        <p style="margin:0;font-size:1.1em;">
+          骨架不错，框架+赛制+心流图是亮点。<br>
+          但三个关键部分空白 → 目前只是<strong style="color:#fff;">执行框架</strong>，<br>
+          <strong style="color:var(--accent);">补上才能落地</strong>。
+        </p>
+      </div>
+    `
+  },
+  {
+    chapter: "总结",
+    duration: 5,
+    narration: "好了，本期分析就到这里。方案文档和这个网页视频的源码都放在项目里了，需要的话直接拿去改。下次见。",
+    build: (ctx) => `
+      <div class="card anim-scale" style="text-align:center;">
+        <div style="font-size:2em;margin-bottom:10px;">📁</div>
+        <p style="font-size:1.15em;">源文件：<code style="background:var(--border);padding:2px 8px;border-radius:4px;">souha_ce_report.html</code></p>
+        <p style="color:var(--muted);margin-top:8px;">按 ← → 键逐页查看 &nbsp;|&nbsp; 按 空格 播放/暂停 &nbsp;|&nbsp; 按 F 全屏</p>
+      </div>
+    `
+  }
+];
+
+// ============================================================
+// 引擎
+// ============================================================
+let currentIdx = 0;
+let playing = false;
+let sceneTimer = null;
+let elapsedInScene = 0;
+let tickInterval = null;
+
+const $stage = document.getElementById('stage');
+const $narrationBar = document.getElementById('narrationBar');
+const $narrationText = document.getElementById('narrationText');
+const $chapterTag = document.getElementById('chapterTag');
+const $progressFill = document.getElementById('progressFill');
+const $timeDisplay = document.getElementById('timeDisplay');
+const $timelineDots = document.getElementById('timelineDots');
+const $btnPlay = document.getElementById('btnPlay');
+const $btnPrev = document.getElementById('btnPrev');
+const $btnNext = document.getElementById('btnNext');
+
+// Build timeline dots
+scenes.forEach((_, i) => {
+  const dot = document.createElement('span');
+  dot.className = 'timeline-dot';
+  dot.title = `场景 ${i+1}: ${scenes[i].chapter}`;
+  dot.onclick = () => goTo(i);
+  $timelineDots.appendChild(dot);
+});
+
+// Build scene DOM
+scenes.forEach((s, i) => {
+  const el = document.createElement('div');
+  el.className = 'scene';
+  el.id = `scene-${i}`;
+  el.innerHTML = `<div class="chapter-marker">${s.chapter}</div>`;
+  $stage.appendChild(el);
+});
+
+function renderScene(i) {
+  const el = document.getElementById(`scene-${i}`);
+  const s = scenes[i];
+  el.innerHTML = `<div class="chapter-marker">${s.chapter}</div>` + s.build({});
+}
+
+function showScene(i) {
+  // Hide all
+  document.querySelectorAll('.scene').forEach(el => el.classList.remove('active'));
+  // Render & show current
+  renderScene(i);
+  const el = document.getElementById(`scene-${i}`);
+  requestAnimationFrame(() => el.classList.add('active'));
+
+  // Narration
+  $narrationText.textContent = scenes[i].narration;
+  $narrationBar.classList.add('visible');
+
+  // Chapter tag
+  $chapterTag.textContent = scenes[i].chapter;
+
+  // Update dots
+  document.querySelectorAll('.timeline-dot').forEach((d, j) => {
+    d.className = 'timeline-dot';
+    if (j < i) d.classList.add('done');
+    if (j === i) d.classList.add('current');
+  });
+
+  // Progress
+  $progressFill.style.width = ((i+1) / scenes.length * 100) + '%';
+}
+
+function goTo(i) {
+  if (i < 0 || i >= scenes.length) return;
+  stopAuto();
+  currentIdx = i;
+  elapsedInScene = 0;
+  showScene(i);
+  updateTime();
+  updateButtons();
+}
+
+function updateTime() {
+  const m = Math.floor(elapsedInScene / 60);
+  const s = elapsedInScene % 60;
+  $timeDisplay.textContent = String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+}
+
+function updateButtons() {
+  $btnPrev.disabled = currentIdx === 0;
+  $btnNext.disabled = currentIdx === scenes.length - 1;
+}
+
+function stopAuto() {
+  playing = false;
+  clearTimeout(sceneTimer);
+  clearInterval(tickInterval);
+  $btnPlay.textContent = '▶ 播放';
+}
+
+function startAuto() {
+  if (currentIdx >= scenes.length - 1) { currentIdx = 0; showScene(0); }
+  playing = true;
+  $btnPlay.textContent = '⏸ 暂停';
+  scheduleNext();
+  tickInterval = setInterval(() => {
+    elapsedInScene++;
+    updateTime();
+    // Auto-advance if stuck past duration + 2s grace
+    if (elapsedInScene > scenes[currentIdx].duration + 2) {
+      if (currentIdx < scenes.length - 1) { goTo(currentIdx + 1); if (playing) scheduleNext(); }
+      else stopAuto();
+    }
+  }, 1000);
+}
+
+function scheduleNext() {
+  clearTimeout(sceneTimer);
+  const dur = scenes[currentIdx].duration * 1000;
+  sceneTimer = setTimeout(() => {
+    if (!playing) return;
+    if (currentIdx < scenes.length - 1) {
+      goTo(currentIdx + 1);
+      scheduleNext();
+    } else {
+      stopAuto();
+    }
+  }, dur);
+}
+
+const controls = {
+  toggle() {
+    if (playing) stopAuto();
+    else startAuto();
+  },
+  next() { stopAuto(); goTo(currentIdx + 1); },
+  prev() { stopAuto(); goTo(currentIdx - 1); }
+};
+
+// Keyboard
+document.addEventListener('keydown', e => {
+  if (e.key === ' ' || e.key === 'Spacebar') { e.preventDefault(); controls.toggle(); }
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); controls.next(); }
+  if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   { e.preventDefault(); controls.prev(); }
+  if (e.key === 'Escape') { stopAuto(); }
+});
+
+// Init
+goTo(0);
+
+console.log('《代号：搜哈》CE方案分析 — Web Video Presentation');
+console.log('场景数:', scenes.length);
+console.log('总时长:', scenes.reduce((a,s)=>a+s.duration,0), '秒');
+console.log('操作: 空格=播放/暂停 | ←→=前后翻页 | Esc=停止');
+</script>
+</body>
+</html>

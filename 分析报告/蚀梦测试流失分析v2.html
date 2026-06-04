@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>《绿梦》玩家流失分析报告</title>
+<style>
+:root {
+  --bg: #06090f; --surface: #111827; --surface2: #18202e;
+  --text: #c8d2e0; --text2: #94a3b8;
+  --accent: #4da0ff; --green: #34d399; --red: #f87171;
+  --yellow: #fbbf24; --purple: #a78bfa; --cyan: #22d3ee; --orange: #fb923c;
+  --muted: #64748b; --border: #1e293b; --border2: #2a3647;
+  --radius: 14px; --radius-sm: 10px;
+  --font: "PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:var(--font); background:var(--bg); color:var(--text); overflow:hidden; height:100vh; user-select:none; -webkit-font-smoothing:antialiased; }
+.bg-glow { position:fixed; width:500px; height:500px; border-radius:50%; filter:blur(150px); opacity:.05; pointer-events:none; z-index:0; }
+.bg-glow.g1 { top:-150px; left:-150px; background:var(--accent); }
+.bg-glow.g2 { bottom:-150px; right:-150px; background:var(--purple); }
+.topbar { position:fixed; top:0; left:0; right:0; z-index:200; display:flex; align-items:center; justify-content:space-between; padding:14px 28px; background:linear-gradient(to bottom, rgba(6,9,15,.97), transparent); }
+.topbar .logo { font-weight:800; font-size:.88em; background:linear-gradient(135deg, var(--accent), var(--purple)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.topbar .ct { font-size:.74em; color:var(--text2); background:var(--surface); padding:5px 13px; border-radius:99px; border:1px solid var(--border2); }
+.progress-wrap { position:fixed; top:0; left:0; right:0; z-index:210; height:2px; background:transparent; }
+.progress-fill { height:100%; background:linear-gradient(90deg, var(--accent), var(--purple), var(--cyan)); width:0%; transition:width .4s ease; }
+.stage { width:100vw; height:100vh; position:relative; z-index:1; }
+.scene { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:55px 45px 125px; opacity:0; transform:translateY(14px); transition:opacity .5s cubic-bezier(.4,0,.2,1),transform .5s cubic-bezier(.4,0,.2,1); pointer-events:none; }
+.scene.on { opacity:1; transform:translateY(0); pointer-events:auto; }
+.card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:30px 36px; max-width:960px; width:100%; margin:5px 0; box-shadow:0 4px 28px rgba(0,0,0,.4); }
+.card-sm { padding:20px 26px; max-width:700px; }
+.ca { border-left:3px solid var(--accent); } .cg { border-left:3px solid var(--green); }
+.cr { border-left:3px solid var(--red); } .cy { border-left:3px solid var(--yellow); }
+.cp { border-left:3px solid var(--purple); }
+h1 { font-size:2.2em; font-weight:900; color:#fff; letter-spacing:.01em; line-height:1.15; }
+h2 { font-size:1.35em; font-weight:700; margin-bottom:14px; background:linear-gradient(135deg, var(--accent), var(--accent)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+h3 { font-size:1.05em; font-weight:600; color:#e8edf5; margin-bottom:5px; }
+p { font-size:.96em; line-height:1.65; }
+.mu { color:var(--text2); } .sm { font-size:.82em; color:var(--muted); }
+.tag { display:inline-block; padding:3px 9px; border-radius:99px; font-size:.72em; font-weight:600; margin-right:4px; margin-bottom:3px; letter-spacing:.02em; }
+.tr { background:rgba(248,113,113,.1); color:var(--red); border:1px solid rgba(248,113,113,.2); }
+.tg { background:rgba(52,211,153,.1); color:var(--green); border:1px solid rgba(52,211,153,.2); }
+.ty { background:rgba(251,191,36,.1); color:var(--yellow); border:1px solid rgba(251,191,36,.2); }
+.ta { background:rgba(77,160,255,.1); color:var(--accent); border:1px solid rgba(77,160,255,.2); }
+.tp { background:rgba(167,139,250,.1); color:var(--purple); border:1px solid rgba(167,139,250,.2); }
+.grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; width:100%; max-width:960px; }
+.grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; width:100%; max-width:960px; }
+.grid-5 { display:grid; grid-template-columns:repeat(5,1fr); gap:10px; width:100%; max-width:960px; }
+.narration-bar { position:fixed; bottom:88px; left:50%; transform:translateX(-50%); z-index:150; background:rgba(17,24,39,.9); border:1px solid var(--border2); border-radius:var(--radius); padding:13px 26px; max-width:820px; width:90%; text-align:center; backdrop-filter:blur(14px); box-shadow:0 4px 24px rgba(0,0,0,.5); opacity:0; transition:opacity .35s ease; }
+.narration-bar.on { opacity:1; }
+.narration-bar .nt { font-size:1.02em; line-height:1.55; color:#fff; }
+.narration-bar .nl { font-size:.66em; color:var(--muted); letter-spacing:.1em; text-transform:uppercase; margin-bottom:3px; }
+.controls { position:fixed; bottom:0; left:0; right:0; z-index:200; display:flex; align-items:center; justify-content:center; gap:16px; padding:16px 28px 22px; background:linear-gradient(transparent, rgba(6,9,15,.97) 50%); }
+.btn { background:rgba(255,255,255,.04); border:1px solid var(--border2); color:var(--text); padding:8px 18px; border-radius:var(--radius-sm); font-size:.85em; cursor:pointer; transition:all .25s; font-family:inherit; backdrop-filter:blur(8px); }
+.btn:hover { background:rgba(255,255,255,.1); border-color:var(--accent); color:#fff; }
+.btn:disabled { opacity:.25; cursor:default; }
+.btn-play { padding:10px 28px; font-size:.95em; font-weight:700; background:linear-gradient(135deg, rgba(77,160,255,.2), rgba(167,139,250,.15)); border-color:rgba(77,160,255,.4); color:#fff; }
+.btn-play:hover { background:linear-gradient(135deg, rgba(77,160,255,.3), rgba(167,139,250,.25)); }
+.timeline-dots { display:flex; gap:8px; align-items:center; }
+.tl-dot { width:6px; height:6px; border-radius:50%; background:var(--border2); transition:all .4s cubic-bezier(.4,0,.2,1); cursor:pointer; }
+.tl-dot.done { background:var(--accent); box-shadow:0 0 6px rgba(77,160,255,.4); }
+.tl-dot.cur { background:var(--accent); transform:scale(2.2); box-shadow:0 0 12px rgba(77,160,255,.6); }
+.cm { position:absolute; top:16px; left:24px; font-size:.68em; color:var(--muted); letter-spacing:.1em; text-transform:uppercase; font-weight:600; }
+.stat-row { display:flex; gap:20px; flex-wrap:wrap; justify-content:center; align-items:center; }
+.stat-item { text-align:center; min-width:70px; }
+.stat-item .sv { font-size:2em; font-weight:900; letter-spacing:-.02em; }
+.stat-item .sl { font-size:.75em; color:var(--muted); margin-top:2px; }
+.divider { width:36px; height:2px; border-radius:1px; background:linear-gradient(90deg, var(--accent), transparent); margin:14px auto; }
+.compare-row { display:flex; gap:12px; width:100%; max-width:960px; }
+.compare-col { flex:1; background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius-sm); padding:20px; }
+.compare-col:hover { transform:translateY(-2px); box-shadow:0 8px 20px rgba(0,0,0,.25); transition:all .2s; }
+.table-wrap { overflow-x:auto; width:100%; max-width:960px; }
+table { width:100%; border-collapse:collapse; font-size:.84em; }
+th { text-align:left; padding:9px 11px; border-bottom:1px solid var(--border2); color:var(--accent); font-weight:700; font-size:.76em; letter-spacing:.04em; }
+td { padding:9px 11px; border-bottom:1px solid var(--border); vertical-align:top; }
+tr:hover td { background:rgba(255,255,255,.012); }
+.insight { background:rgba(77,160,255,.04); border:1px solid rgba(77,160,255,.15); border-radius:var(--radius-sm); padding:14px 20px; font-size:.88em; }
+.flow-row { display:flex; align-items:center; gap:8px; width:100%; max-width:960px; flex-wrap:wrap; justify-content:center; }
+.flow-box { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); padding:14px 18px; text-align:center; min-width:100px; font-size:.84em; }
+.flow-box strong { display:block; font-size:1.1em; margin-bottom:2px; }
+.flow-arrow { color:var(--muted); font-size:1em; }
+.cluster-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); padding:18px 14px; text-align:center; transition:transform .2s; }
+.cluster-card:hover { transform:translateY(-3px); box-shadow:0 8px 24px rgba(0,0,0,.3); }
+.cluster-card .cc-icon { font-size:2.2em; margin-bottom:6px; line-height:1; }
+.cluster-card .cc-name { font-weight:700; font-size:.92em; margin-bottom:4px; }
+.cluster-card .cc-desc { font-size:.76em; color:var(--text2); line-height:1.5; }
+@keyframes ri { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+@keyframes si { from { opacity:0; transform:scale(.95); } to { opacity:1; transform:scale(1); } }
+.ar { animation:ri .45s ease both; } .ar1 { animation:ri .45s .07s ease both; }
+.ar2 { animation:ri .45s .14s ease both; } .ar3 { animation:ri .45s .21s ease both; }
+.ar4 { animation:ri .45s .28s ease both; } .as { animation:si .45s ease both; }
+@media (max-width:768px) {
+  .scene { padding:40px 14px 140px; } .card { padding:20px 16px; } h1 { font-size:1.4em; }
+  .grid-2,.grid-3,.grid-5,.compare-row { grid-template-columns:1fr; flex-direction:column; }
+  .narration-bar { bottom:105px; }
+}
+</style>
+</head>
+<body>
+
+<div class="bg-glow g1"></div><div class="bg-glow g2"></div>
+<div class="topbar">
+  <span class="logo">《绿梦》Beta测试 · 玩家流失分析</span>
+  <span class="ct" id="chapterTag">开篇</span>
+</div>
+<div class="progress-wrap"><div class="progress-fill" id="progressFill"></div></div>
+<div class="narration-bar" id="narrationBar">
+  <div class="nl">讲解</div><div class="nt" id="narrationText"></div>
+</div>
+<div style="position:fixed;bottom:78px;left:50%;transform:translateX(-50%);z-index:180;" class="timeline-dots" id="timelineDots"></div>
+<main class="stage" id="stage"></main>
+<nav class="controls">
+  <button class="btn" id="btnPrev"><</button>
+  <button class="btn btn-play" id="btnPlay">Play</button>
+  <button class="btn" id="btnNext">></button>
+  <span style="color:var(--muted);font-size:.8em;" id="timeDisplay">00:00</span>
+</nav>
+
+<script>
+function $(id){return document.getElementById(id);}
+function H(a){return a.join('');}
+var D=[];
+function S(c,d,n,h){D.push({chapter:c,duration:d,narration:n,html:h});}
+function T(l,c){return '<span class="tag t'+c+'">'+l+'</span>';}
+function IC(icon,name,desc,color){return '<div class="cluster-card ar" style="border-top:3px solid var(--'+color+');"><div class="cc-icon">'+icon+'</div><div class="cc-name" style="color:var(--'+color+');">'+name+'</div><div class="cc-desc">'+desc+'</div></div>';}
+
+// ======================== SCENES ========================
+
+S('开篇',7,
+  '绿梦Beta测试结束后，我们把后台活跃数据和问卷数据做了交叉匹配。按照活跃天数，把玩家分成三组：留存玩家、次日流失玩家、三日流失玩家。今天这份报告回答三个问题——谁更容易流失、他们为什么流失、我们能做什么。',
+  H([
+    '<div class="card ca as" style="text-align:center;padding:40px;">',
+      '<div style="font-size:.78em;color:var(--accent);letter-spacing:.12em;margin-bottom:14px;font-weight:600;">BETA TEST · PLAYER CHURN ANALYSIS</div>',
+      '<h1 style="font-size:2.6em;margin-bottom:6px;">玩家流失分析报告</h1>',
+      '<p style="font-size:1.1em;color:var(--text2);">后台活跃数据 × 问卷调研数据 · 交叉匹配</p>',
+      '<div class="divider"></div>',
+      '<div class="stat-row" style="margin-top:12px;">',
+        '<div class="stat-item"><div class="sv" style="color:var(--accent);">3</div><div class="sl">研究问题</div></div>',
+        '<div class="stat-item"><div class="sv" style="color:var(--green);">3</div><div class="sl">玩家分层</div></div>',
+        '<div class="stat-item"><div class="sv" style="color:var(--purple);">5</div><div class="sl">玩家聚类</div></div>',
+        '<div class="stat-item"><div class="sv" style="color:var(--yellow);">2</div><div class="sl">流失节点</div></div>',
+      '</div>',
+    '</div>'
+  ])
+);
+
+S('开篇',8,
+  '先对齐定义。留存玩家——活跃天数大于等于六天，基本贯穿了整个测试期。次日流失——第一天登录后第二天就跑了，再没回来过。三日流失——撑到第二天，但第三天也走了。这三组人的画像和行为差异，就是今天报告的核心线索。',
+  H([
+    '<h2>玩家分层定义</h2>',
+    '<div class="grid-3">',
+      '<div class="compare-col ar" style="text-align:center;border-top:3px solid var(--green);"><div style="font-size:2.4em;margin-bottom:6px;color:var(--green);">6+</div><div style="font-weight:700;font-size:1.1em;">留存玩家</div><div style="font-size:.82em;color:var(--text2);margin-top:4px;">活跃天数 >= 6<br>贯穿测试期<br><strong style="color:var(--green);">基准对照组</strong></div></div>',
+      '<div class="compare-col ar1" style="text-align:center;border-top:3px solid var(--red);"><div style="font-size:2.4em;margin-bottom:6px;color:var(--red);">Day1</div><div style="font-weight:700;font-size:1.1em;">' + T('次日流失','r') + '</div><div style="font-size:.82em;color:var(--text2);margin-top:4px;">活跃天数 = 1<br>第二天走，再未登录<br><strong style="color:var(--red);">首日印象决定去留</strong></div></div>',
+      '<div class="compare-col ar2" style="text-align:center;border-top:3px solid var(--yellow);"><div style="font-size:2.4em;margin-bottom:6px;color:var(--yellow);">Day2</div><div style="font-weight:700;font-size:1.1em;">' + T('三日流失','y') + '</div><div style="font-size:.82em;color:var(--text2);margin-top:4px;">活跃天数 = 2<br>第三天走，再未登录<br><strong style="color:var(--yellow);">深度体验暴露问题</strong></div></div>',
+    '</div>'
+  ])
+);
+
+S('开篇',6,
+  '三个核心问题贯穿整份报告。第一，流失人群画像是怎样的——哪些人更容易流失？第二，次日流失和三日流失的原因有什么不同？第三，针对前期流失，我们能重点优化什么？',
+  H([
+    '<h2>三个研究问题</h2>',
+    '<div class="grid-3">',
+      '<div class="compare-col ar" style="text-align:center;border-top:3px solid var(--accent);"><div style="font-size:2em;margin-bottom:4px;">1</div><div style="font-weight:700;">谁更容易流失？</div><div style="font-size:.82em;color:var(--text2);margin-top:4px;">流失人群画像<br>人口学 · 设备 · 游戏经验 · 诉求</div></div>',
+      '<div class="compare-col ar1" style="text-align:center;border-top:3px solid var(--red);"><div style="font-size:2em;margin-bottom:4px;">2</div><div style="font-weight:700;">为什么流失？</div><div style="font-size:.82em;color:var(--text2);margin-top:4px;">次流 vs 三日流失<br>行为差异 · 态度差异</div></div>',
+      '<div class="compare-col ar2" style="text-align:center;border-top:3px solid var(--green);"><div style="font-size:2em;margin-bottom:4px;">3</div><div style="font-weight:700;">怎么优化？</div><div style="font-size:.82em;color:var(--text2);margin-top:4px;">可落地的方向<br>基础体验 · 战斗 · 教学</div></div>',
+    '</div>'
+  ])
+);
+
+// ====== Q1 ======
+S('Q1 · 谁在流失',10,
+  '第一个问题，谁更容易流失。从人口学看，女性玩家次日流失更突出，十八到二十五岁年轻人留存最好。城市层级上，一二线城市玩家反而更容易在次日流失，低线城市留存率更高。PC端留存优于移动端，双端玩家留存最好。',
+  H([
+    '<h2>Q1：流失人群画像 — 人口学 & 设备</h2>',
+    '<div class="grid-2">',
+      '<div class="compare-col ar" style="border-top:3px solid var(--red);"><div style="font-weight:700;margin-bottom:6px;">' + T('更高流失风险','r') + '</div><div style="font-size:.83em;color:var(--text2);line-height:1.7;">女性玩家 → 次日流失突出<br>一二线城市 → 次日流失更高<br>36岁以上 → 三日流失突出<br>移动端 → 留存低于PC端</div></div>',
+      '<div class="compare-col ar1" style="border-top:3px solid var(--green);"><div style="font-weight:700;margin-bottom:6px;">' + T('更高留存率','g') + '</div><div style="font-size:.83em;color:var(--text2);line-height:1.7;">18~25岁 → 留存最好<br>低线城市 → 留存相对更高<br>PC端 → 留存优于移动端<br>双端玩家 → 留存最好</div></div>',
+    '</div>',
+    '<div class="insight ar2" style="margin-top:10px;"><strong style="color:var(--accent);">关键发现：</strong>有银恶类游戏经验的玩家留存率相对较高；没有二游经验的玩家可能更容易流失。</div>'
+  ])
+);
+
+S('Q1 · 谁在流失',10,
+  '从长期诉求看，我们把玩家聚成了五类。剧情探索党的留存情况最好。强度党的次日流失问题突出——他们追求版本最强角色和配队，但首日没有足够的内容让他们感知到养成的价值。操作高玩党的三日流失占比偏高——他们对战斗有更高的期待，但实际体验可能没跟上。',
+  H([
+    '<h2>Q1：流失人群画像 — 长期诉求×留存</h2>',
+    '<div class="grid-3">',
+      '<div class="compare-col ar" style="text-align:center;border-top:3px solid var(--green);"><div style="font-weight:700;color:var(--green);">剧情探索党</div><div style="font-size:.82em;color:var(--text2);margin-top:4px;">' + T('留存最好','g') + '<br>看重剧情和探索<br>内容沉浸感驱动</div></div>',
+      '<div class="compare-col ar1" style="text-align:center;border-top:3px solid var(--red);"><div style="font-weight:700;color:var(--red);">强度党</div><div style="font-size:.82em;color:var(--text2);margin-top:4px;">' + T('次日流失突出','r') + '<br>追求版本最强配队<br>首日未感知养成价值</div></div>',
+      '<div class="compare-col ar2" style="text-align:center;border-top:3px solid var(--yellow);"><div style="font-weight:700;color:var(--yellow);">操作高玩党</div><div style="font-size:.82em;color:var(--text2);margin-top:4px;">' + T('三日流失偏高','y') + '<br>追求操作与挑战<br>战斗体验未达预期</div></div>',
+    '</div>',
+    '<div class="insight ar3" style="margin-top:10px;"><strong style="color:var(--yellow);">注意：</strong>初印象原本好评的玩家，在第三日流失的比例反而显著提高——说明两天体验后确实没达到他们的预期。</div>'
+  ])
+);
+
+// ====== 5 Clusters ======
+S('聚类 · 五类玩家画像',12,
+  '展开看五类玩家的完整画像。通过因子分析加K-Means聚类，我们从问卷诉求题中提炼出五类核心群体。剧情党看重剧情和探索，PC端占比大，一二线城市多。操作高玩党看重挑战和操作，银恶和卷轴格斗经验最丰富。解谜成就党由完成度驱动。厨力党由情感驱动抽卡养角色，年轻人为主。强度党看重强度和规划，低线城市和移动端占比高。',
+  H([
+    '<h2>五类玩家聚类画像</h2>',
+    '<div class="grid-5">',
+      IC('📖','剧情党','看重剧情和探索<br>追求内容沉浸感<br>一二线城市占比高<br>PC端占比更大<br>银恶经验比例高','accent'),
+      IC('⚔️','操作高玩党','看重挑战和操作<br>注重策略性<br>PC端占比更大<br>银恶+卷轴格斗经验多<br>'+T('三日流失偏高','y'),'red'),
+      IC('🧩','解谜成就党','看重解谜和成就收集<br>同时注重探索<br>内容完成度驱动','purple'),
+      IC('💜','厨力党','由情感驱动<br>抽卡和培养角色<br>18-25岁占比高<br>移动端占比更大','green'),
+      IC('👑','强度党','看重强度和规划<br>培养版本最强配队<br>低线城市占比高<br>移动端占比更大<br>ARPG+卷轴经验多<br>'+T('次日流失突出','r'),'yellow'),
+    '</div>',
+    '<div class="insight ar4" style="margin-top:10px;"><strong style="color:var(--accent);">数据来源：</strong>问卷诉求题 → 因子分析提纯核心维度 → K-Means聚类 → 5类群体。每类群体的核心特征显著高于其他群体。</div>'
+  ])
+);
+
+// ====== Q2 ======
+S('Q2 · 为什么流失',12,
+  '第二个问题，为什么流失。次日流失玩家——主要是玩法和美术没打动他们。横版动作玩法对他们吸引力不足，认为战斗无聊，不喜欢美术风格。但从上手难度看，次日流失玩家的难度评分反而是最高的——说明不是玩不懂，是不想玩。这属于产品品质未达预期的自然流失。',
+  H([
+    '<h2>Q2：次日流失 — 玩法和美术没留住人</h2>',
+    '<div class="grid-2">',
+      '<div class="compare-col ar" style="border-top:3px solid var(--red);"><div style="font-weight:700;margin-bottom:6px;color:var(--red);">核心流失原因</div><div style="font-size:.83em;color:var(--text2);line-height:1.7;">缺少横版动作玩法的游玩动力<br>认为战斗无聊<br>不喜欢美术风格<br>战斗和美术好评率显著低于留存玩家</div></div>',
+      '<div class="compare-col ar1" style="border-top:3px solid var(--yellow);"><div style="font-weight:700;margin-bottom:6px;color:var(--yellow);">排除项</div><div style="font-size:.83em;color:var(--text2);line-height:1.7;">上手难度评分反而是三组最高<br>→ 不是"玩不懂"，是"不想玩"<br>战斗/操作吐槽率为三组最低<br>→ 可能体验深度不够</div></div>',
+    '</div>',
+    '<div class="insight ar2" style="margin-top:10px;"><strong style="color:var(--red);">定性判断：</strong>属于产品品质未达预期的自然流失。首日展示的游戏玩法和美术带来的心流，无法吸引其继续游玩。</div>'
+  ])
+);
+
+S('Q2 · 为什么流失',12,
+  '三日流失不一样。这群人扛过了第一天，说明初印象还行。但第二天深度体验后，战斗乐趣的好评率偏低，卡顿和流畅度问题严重侵蚀体验，引导教学和设备适配也拉了后腿。可以说——次日流失是"不够好"，三日流失是"有期待但被消耗掉了"。',
+  H([
+    '<h2>Q2：三日流失 — 基础体验消耗了战斗热情</h2>',
+    '<div class="grid-2">',
+      '<div class="compare-col ar" style="border-top:3px solid var(--red);"><div style="font-weight:700;margin-bottom:6px;color:var(--red);">核心流失原因</div><div style="font-size:.83em;color:var(--text2);line-height:1.7;">战斗乐趣好评率偏低<br>' + T('卡顿感知尤为突出','r') + '<br>流畅度、设备适配差<br>引导教学不足<br>战斗/操作上手困难吐槽率高</div></div>',
+      '<div class="compare-col ar1" style="border-top:3px solid var(--accent);"><div style="font-weight:700;margin-bottom:6px;color:var(--accent);">与次日流失的差异</div><div style="font-size:.83em;color:var(--text2);line-height:1.7;">50%以战斗爽感为核心动力（三组最高）<br>→ 对战斗的期待值更高<br>实际战斗体验却跟不上期待<br>基础体验问题（卡顿/流畅度）加剧了落差</div></div>',
+    '</div>',
+    '<div class="insight ar2" style="margin-top:10px;"><strong style="color:var(--yellow);">定性判断：</strong>不是游戏方向有问题，是体验质量消耗了玩家耐心。基础体验优化后，这群人的留存有较大回升空间。</div>'
+  ])
+);
+
+// ====== Causal chain ======
+S('因果链 · 从谁流失到怎么改',11,
+  '把前面两条线索串成一条因果链。左侧是谁在流失——次日流失以女性、一二线城市、强度党为主；三日流失以操作高玩党、移动端为主。中间是为什么——次日流失卡在首日印象关，玩法和美术没打动人；三日流失卡在深度体验关，战斗和流畅度消耗了耐心。右侧是怎么改。',
+  H([
+    '<h2>流失因果链：谁流失 → 为什么 → 怎么改</h2>',
+    '<div class="flow-row as" style="margin-bottom:16px;">',
+      '<div style="text-align:center;min-width:140px;" class="ar"><div style="font-size:.8em;color:var(--muted);margin-bottom:4px;">谁在流失</div>',
+        '<div class="flow-box" style="border-top:3px solid var(--red);margin-bottom:4px;"><strong>次日流失</strong>女性/一二线<br>强度党/移动端</div>',
+        '<div class="flow-box" style="border-top:3px solid var(--yellow);"><strong>三日流失</strong>操作高玩党<br>移动端/高期待</div>',
+      '</div>',
+      '<span class="flow-arrow ar1">→</span>',
+      '<div style="text-align:center;min-width:160px;" class="ar1"><div style="font-size:.8em;color:var(--muted);margin-bottom:4px;">为什么流失</div>',
+        '<div class="flow-box" style="border-top:3px solid var(--red);margin-bottom:4px;"><strong>首日印象关</strong>玩法没吸引力<br>美术不喜欢</div>',
+        '<div class="flow-box" style="border-top:3px solid var(--yellow);"><strong>深度体验关</strong>战斗期待落差<br>卡顿+流畅度消耗</div>',
+      '</div>',
+      '<span class="flow-arrow ar2">→</span>',
+      '<div style="text-align:center;min-width:180px;" class="ar2"><div style="font-size:.8em;color:var(--muted);margin-bottom:4px;">怎么优化</div>',
+        '<div class="flow-box" style="border-top:3px solid var(--green);margin-bottom:4px;"><strong>基础体验</strong>缓解卡顿<br>提升流畅度+画质</div>',
+        '<div class="flow-box" style="border-top:3px solid var(--green);margin-bottom:4px;"><strong>战斗体验</strong>优化闪避<br>加强怪物抬手提示</div>',
+        '<div class="flow-box" style="border-top:3px solid var(--green);"><strong>教学拆分</strong>拆分战斗机制<br>和养成指引</div>',
+      '</div>',
+    '</div>',
+    '<div class="insight ar3"><strong style="color:var(--accent);">核心洞察：</strong>次日流失和三日流失是两种截然不同的流失逻辑，需要分层施策。前者靠首日内容吸引力，后者靠深度体验质量。</div>'
+  ])
+);
+
+// ====== 3-group comparison ======
+S('对比 · 三组全维度',14,
+  '最后放一张全量对比表。留存、次日流失、三日流失，在人口学、设备、游戏经验、长期诉求、好评差评、上手难度这六个维度上的差异，都在这里。你可以把它当成整份报告的速查表。',
+  H([
+    '<h2>三组全维度对比矩阵</h2>',
+    '<div class="table-wrap as"><table>',
+      '<thead><tr><th style="width:80px;">维度</th><th style="width:160px;">' + T('次日流失','r') + '</th><th style="width:160px;">' + T('三日流失','y') + '</th><th style="width:160px;">' + T('留存玩家','g') + '</th></tr></thead><tbody>',
+      '<tr class="ar"><td><strong>性别</strong></td><td style="color:var(--red);">女性占比突出</td><td>—</td><td style="color:var(--green);">男性占比较高</td></tr>',
+      '<tr class="ar1"><td><strong>年龄</strong></td><td>—</td><td style="color:var(--yellow);">36岁以上突出</td><td style="color:var(--green);">18-25岁占比高</td></tr>',
+      '<tr class="ar2"><td><strong>城市</strong></td><td style="color:var(--red);">一二线偏高</td><td>—</td><td style="color:var(--green);">低线城市留存好</td></tr>',
+      '<tr class="ar3"><td><strong>设备</strong></td><td style="color:var(--red);">移动端为主</td><td style="color:var(--yellow);">移动端为主</td><td style="color:var(--green);">PC+双端占比高</td></tr>',
+      '<tr class="ar4"><td><strong>游戏经验</strong></td><td style="color:var(--red);">二游经验少<br>横版动作动力弱</td><td style="color:var(--yellow);">战斗期待高<br>体验落差大</td><td style="color:var(--green);">银恶经验比例高<br>多品类经验丰富</td></tr>',
+      '<tr><td><strong>长期诉求</strong></td><td style="color:var(--red);">强度党突出<br>首日未感知养成价值</td><td style="color:var(--yellow);">操作高玩党偏多<br>战斗爽感未满足</td><td style="color:var(--green);">剧情探索党为主<br>内容沉浸驱动</td></tr>',
+      '<tr><td><strong>好评点</strong></td><td style="color:var(--red);">美术+玩法好评<br>均低于留存水平</td><td style="color:var(--yellow);">战斗乐趣好评低<br>基础体验好评低</td><td style="color:var(--green);">美术和玩法<br>为Top2好评</td></tr>',
+      '<tr><td><strong>差评点</strong></td><td style="color:var(--red);">战斗无聊<br>美术风格不满</td><td style="color:var(--yellow);">卡顿感知最突出<br>流畅度/适配差</td><td style="color:var(--green);">按键和卡顿<br>为Top2差评</td></tr>',
+      '<tr><td><strong>上手难度</strong></td><td>评分反而最高<br>→ 不是玩不懂</td><td style="color:var(--yellow);">战斗/操作困难<br>吐槽率三组最高</td><td style="color:var(--green);">机制理解类困难<br>诉求更深度</td></tr>',
+      '</tbody></table></div>',
+    '<div class="insight ar4" style="margin-top:8px;"><strong style="color:var(--accent);">三个可优化方向：</strong>基础体验（卡顿+流畅度+画质）→ 战斗体验（闪避+怪物提示+教学拆分）→ 让玩家更早体验到战斗爽感</div>'
+  ])
+);
+
+// ====== Summary ======
+S('总结',7,
+  '总结一下。这份报告的核心结论就三条。第一，次日流失和三日流失不是一回事——次日是初印象没过关，三日是深度体验被消耗。第二，五类玩家的留存风险不一样，强度党和操作高玩党需要分层对待。第三，基础体验的卡顿和流畅度是贯穿两组流失玩家的共同痛点，优化优先于增加新内容。以上。',
+  H([
+    '<div class="card ca as" style="text-align:center;padding:36px;">',
+      '<div style="font-size:.76em;color:var(--accent);letter-spacing:.1em;margin-bottom:12px;font-weight:600;">CONCLUSION</div>',
+      '<h2 style="border:none;padding:0;font-size:1.6em;background:none;-webkit-text-fill-color:var(--accent);">分层施策，精准挽留</h2>',
+      '<div class="divider"></div>',
+      '<div class="grid-3" style="margin-top:10px;">',
+        '<div class="ar" style="text-align:center;padding:14px;"><div style="font-size:1.6em;font-weight:800;color:var(--accent);">1</div><div style="font-size:.85em;">次日 ≠ 三日<br><span style="color:var(--text2);">两种逻辑，分层应对</span></div></div>',
+        '<div class="ar1" style="text-align:center;padding:14px;"><div style="font-size:1.6em;font-weight:800;color:var(--purple);">2</div><div style="font-size:.85em;">5类玩家风险不同<br><span style="color:var(--text2);">强度党+操作党重点观察</span></div></div>',
+        '<div class="ar2" style="text-align:center;padding:14px;"><div style="font-size:1.6em;font-weight:800;color:var(--green);">3</div><div style="font-size:.85em;">基础体验优先<br><span style="color:var(--text2);">卡顿流畅度 > 新内容</span></div></div>',
+      '</div>',
+      '<p style="margin-top:16px;color:var(--muted);font-size:.78em;">lvmen_churn_report.html | 空格播放 · 左右键翻页</p>',
+    '</div>'
+  ])
+);
+
+// ======================== ENGINE ========================
+var ci=0,playing=false,sT=null,elapsed=0,tI=null;
+var $S=$('stage'),$NB=$('narrationBar'),$NT=$('narrationText'),$CT=$('chapterTag'),$PF=$('progressFill'),$TD=$('timeDisplay'),$TL=$('timelineDots'),$BP=$('btnPlay'),$BL=$('btnPrev'),$BR=$('btnNext');
+D.forEach(function(s,i){
+  var d=document.createElement('span');d.className='tl-dot';d.title='S'+(i+1)+': '+s.chapter;
+  d.onclick=(function(x){return function(){go(x);};})(i);$TL.appendChild(d);
+  var e=document.createElement('div');e.className='scene';e.id='s-'+i;$S.appendChild(e);
+});
+function render(i){$('s-'+i).innerHTML='<div class="cm">'+D[i].chapter+'</div>'+D[i].html;}
+function show(i){
+  var all=document.querySelectorAll('.scene');for(var j=0;j<all.length;j++)all[j].classList.remove('on');
+  render(i);requestAnimationFrame(function(){$('s-'+i).classList.add('on');});
+  $NT.textContent=D[i].narration;$NB.classList.add('on');$CT.textContent=D[i].chapter;
+  var dots=document.querySelectorAll('.tl-dot');
+  for(var j=0;j<dots.length;j++){dots[j].className='tl-dot';if(j<i)dots[j].classList.add('done');if(j===i)dots[j].classList.add('cur');}
+  $PF.style.width=((i+1)/D.length*100)+'%';
+}
+function go(i){if(i<0||i>=D.length)return;stop();ci=i;elapsed=0;show(i);upT();upB();}
+function upT(){var m=Math.floor(elapsed/60),s=elapsed%60;$TD.textContent=(m<10?'0'+m:m)+':'+(s<10?'0'+s:s);}
+function upB(){$BL.disabled=(ci===0);$BR.disabled=(ci===D.length-1);}
+function stop(){playing=false;clearTimeout(sT);clearInterval(tI);$BP.textContent='Play';}
+function start(){
+  if(ci>=D.length-1){ci=0;show(0);}playing=true;$BP.textContent='Pause';sched();
+  tI=setInterval(function(){elapsed++;upT();if(elapsed>D[ci].duration+2){if(ci<D.length-1){go(ci+1);if(playing)sched();}else stop();}},1000);
+}
+function sched(){clearTimeout(sT);sT=setTimeout(function(){if(!playing)return;if(ci<D.length-1){go(ci+1);sched();}else stop();},D[ci].duration*1000);}
+var ctrl={toggle:function(){playing?stop():start();},next:function(){stop();go(ci+1);},prev:function(){stop();go(ci-1);}};
+$BP.onclick=ctrl.toggle;$BL.onclick=ctrl.prev;$BR.onclick=ctrl.next;
+document.addEventListener('keydown',function(e){
+  if(e.key===' '||e.key==='Spacebar'){e.preventDefault();ctrl.toggle();}
+  if(e.key==='ArrowRight'||e.key==='ArrowDown'){e.preventDefault();ctrl.next();}
+  if(e.key==='ArrowLeft'||e.key==='ArrowUp'){e.preventDefault();ctrl.prev();}
+  if(e.key==='Escape')stop();
+});
+$BP.textContent='Play';$BL.textContent='<';$BR.textContent='>';
+go(0);upB();
+</script>
+</body>
+</html>

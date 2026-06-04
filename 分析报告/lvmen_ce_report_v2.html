@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>《绿梦：时空之声》付费测前线下CE — 研究方案</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+:root {
+  --bg: #06090f;
+  --bg2: #0c1119;
+  --surface: #111827;
+  --surface2: #18202e;
+  --text: #c8d2e0;
+  --text2: #94a3b8;
+  --accent: #4da0ff;
+  --accent2: #7bc0ff;
+  --green: #34d399;
+  --green2: #6ee7b7;
+  --red: #f87171;
+  --red2: #fca5a5;
+  --yellow: #fbbf24;
+  --yellow2: #fcd34d;
+  --purple: #a78bfa;
+  --purple2: #c4b5fd;
+  --cyan: #22d3ee;
+  --cyan2: #67e8f9;
+  --muted: #64748b;
+  --border: #1e293b;
+  --border2: #2a3647;
+  --glow-blue: 0 0 40px rgba(77,160,255,0.08);
+  --glow-green: 0 0 40px rgba(52,211,153,0.08);
+  --radius: 14px;
+  --radius-sm: 10px;
+  --font: "PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  overflow: hidden; height: 100vh;
+  user-select: none; -webkit-font-smoothing: antialiased;
+}
+
+/* Background glow */
+.bg-glow {
+  position:fixed; width:600px; height:600px; border-radius:50%;
+  filter:blur(160px); opacity:.06; pointer-events:none; z-index:0;
+  transition:all 1s ease;
+}
+.bg-glow.g1 { top:-200px; left:-200px; background:var(--accent); }
+.bg-glow.g2 { bottom:-200px; right:-200px; background:var(--purple); }
+
+/* Top Bar */
+.topbar {
+  position:fixed; top:0; left:0; right:0; z-index:200;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:16px 32px;
+  background:linear-gradient(to bottom, rgba(6,9,15,.98) 60%, transparent);
+}
+.topbar .logo {
+  font-weight:800; font-size:.9em; color:var(--accent);
+  letter-spacing:.06em;
+  background:linear-gradient(135deg, var(--accent), var(--accent2));
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+}
+.topbar .ct {
+  font-size:.75em; color:var(--text2); background:var(--surface);
+  padding:5px 14px; border-radius:99px; border:1px solid var(--border2);
+  letter-spacing:.04em;
+}
+
+/* Progress */
+.progress-wrap { position:fixed; top:0; left:0; right:0; z-index:210; height:2px; background:transparent; }
+.progress-fill {
+  height:100%;
+  background:linear-gradient(90deg, var(--accent), var(--purple), var(--cyan));
+  width:0%; transition:width .4s ease;
+}
+
+/* Stage */
+.stage { width:100vw; height:100vh; position:relative; z-index:1; }
+
+/* Scene */
+.scene {
+  position:absolute; inset:0;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  padding:60px 50px 130px;
+  opacity:0; transform:translateY(16px);
+  transition:opacity .55s cubic-bezier(.4,0,.2,1), transform .55s cubic-bezier(.4,0,.2,1);
+  pointer-events:none;
+}
+.scene.on { opacity:1; transform:translateY(0); pointer-events:auto; }
+
+/* Cards */
+.card {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--radius); padding:36px 42px;
+  max-width:960px; width:100%; margin:6px 0;
+  box-shadow:0 4px 32px rgba(0,0,0,.4), var(--glow-blue);
+  backdrop-filter:blur(4px);
+}
+.card-sm { padding:22px 30px; max-width:700px; }
+.card-glow-a { box-shadow:0 4px 32px rgba(0,0,0,.4), 0 0 60px rgba(77,160,255,.06); }
+.card-glow-g { box-shadow:0 4px 32px rgba(0,0,0,.4), 0 0 60px rgba(52,211,153,.06); }
+.card-glow-p { box-shadow:0 4px 32px rgba(0,0,0,.4), 0 0 60px rgba(167,139,250,.06); }
+
+.ca { border-left:3px solid var(--accent); }
+.cg { border-left:3px solid var(--green); }
+.cr { border-left:3px solid var(--red); }
+.cy { border-left:3px solid var(--yellow); }
+.cp { border-left:3px solid var(--purple); }
+.cc { border-left:3px solid var(--cyan); }
+
+/* Typography */
+h1 { font-size:2.6em; font-weight:900; color:#fff; letter-spacing:.01em; margin-bottom:6px; line-height:1.15; }
+h2 {
+  font-size:1.45em; font-weight:700; margin-bottom:14px;
+  background:linear-gradient(135deg, var(--accent), var(--accent2));
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+}
+h3 { font-size:1.1em; font-weight:600; color:#e8edf5; margin-bottom:6px; }
+p { font-size:1.0em; line-height:1.7; }
+.mu { color:var(--text2); }
+.sm { font-size:.84em; color:var(--muted); }
+
+/* Tags */
+.tag {
+  display:inline-block; padding:4px 10px; border-radius:99px;
+  font-size:.74em; font-weight:600; letter-spacing:.02em;
+  margin-right:5px; margin-bottom:3px;
+}
+.tr { background:rgba(248,113,113,.1); color:var(--red); border:1px solid rgba(248,113,113,.2); }
+.tg { background:rgba(52,211,153,.1); color:var(--green); border:1px solid rgba(52,211,153,.2); }
+.ty { background:rgba(251,191,36,.1); color:var(--yellow); border:1px solid rgba(251,191,36,.2); }
+.ta { background:rgba(77,160,255,.1); color:var(--accent); border:1px solid rgba(77,160,255,.2); }
+.tp { background:rgba(167,139,250,.1); color:var(--purple); border:1px solid rgba(167,139,250,.2); }
+.tc { background:rgba(34,211,238,.1); color:var(--cyan); border:1px solid rgba(34,211,238,.2); }
+
+/* Grid */
+.grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; width:100%; max-width:960px; }
+.grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; width:100%; max-width:960px; }
+.grid-4 { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:12px; width:100%; max-width:960px; }
+
+/* Narration Bar */
+.narration-bar {
+  position:fixed; bottom:90px; left:50%; transform:translateX(-50%); z-index:150;
+  background:rgba(17,24,39,.88); border:1px solid var(--border2);
+  border-radius:var(--radius); padding:14px 28px;
+  max-width:820px; width:90%; text-align:center;
+  backdrop-filter:blur(16px); box-shadow:0 4px 24px rgba(0,0,0,.5);
+  opacity:0; transition:opacity .35s ease;
+}
+.narration-bar.on { opacity:1; }
+.narration-bar .nt { font-size:1.05em; line-height:1.6; color:#fff; font-weight:500; }
+.narration-bar .nl { font-size:.68em; color:var(--muted); letter-spacing:.1em; text-transform:uppercase; margin-bottom:4px; }
+.narration-bar::before {
+  content:''; position:absolute; top:0; left:20px; right:20px; height:1px;
+  background:linear-gradient(90deg, transparent, rgba(255,255,255,.06), transparent);
+}
+
+/* Controls */
+.controls {
+  position:fixed; bottom:0; left:0; right:0; z-index:200;
+  display:flex; align-items:center; justify-content:center; gap:18px;
+  padding:18px 30px 24px;
+  background:linear-gradient(transparent, rgba(6,9,15,.97) 50%);
+}
+.btn {
+  background:rgba(255,255,255,.04); border:1px solid var(--border2);
+  color:var(--text); padding:9px 20px; border-radius:var(--radius-sm);
+  font-size:.88em; cursor:pointer; transition:all .25s; font-family:inherit;
+  backdrop-filter:blur(8px);
+}
+.btn:hover { background:rgba(255,255,255,.1); border-color:var(--accent); color:#fff; }
+.btn:disabled { opacity:.25; cursor:default; }
+.btn-play {
+  padding:11px 30px; font-size:1em; font-weight:700;
+  background:linear-gradient(135deg, rgba(77,160,255,.2), rgba(167,139,250,.15));
+  border-color:rgba(77,160,255,.4); color:#fff;
+  letter-spacing:.04em;
+}
+.btn-play:hover { background:linear-gradient(135deg, rgba(77,160,255,.3), rgba(167,139,250,.25)); }
+
+/* Timeline dots */
+.timeline-dots { display:flex; gap:10px; align-items:center; }
+.tl-dot {
+  width:6px; height:6px; border-radius:50%;
+  background:var(--border2); transition:all .4s cubic-bezier(.4,0,.2,1); cursor:pointer;
+}
+.tl-dot.done { background:var(--accent); box-shadow:0 0 6px rgba(77,160,255,.4); }
+.tl-dot.cur {
+  background:var(--accent); transform:scale(2);
+  box-shadow:0 0 14px rgba(77,160,255,.6);
+}
+
+/* Chapter marker */
+.cm {
+  position:absolute; top:18px; left:28px;
+  font-size:.7em; color:var(--muted); letter-spacing:.12em;
+  text-transform:uppercase; font-weight:600;
+}
+
+/* Big number */
+.big-num { font-size:3.2em; font-weight:900; line-height:1; letter-spacing:-.02em; }
+
+/* Issue cards */
+.issue-card {
+  background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius-sm);
+  padding:18px 20px; transition:transform .2s, box-shadow .2s;
+}
+.issue-card:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(0,0,0,.3); }
+.issue-card .ic-head { font-weight:700; font-size:.95em; margin-bottom:5px; }
+.issue-card .ic-body { font-size:.82em; color:var(--text2); line-height:1.55; }
+.issue-card .ic-stat { font-size:.78em; margin-top:6px; padding:4px 8px; border-radius:6px; display:inline-block; }
+
+/* Module cards */
+.module-col {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--radius-sm); padding:22px 18px;
+  text-align:center; transition:transform .2s, box-shadow .2s;
+}
+.module-col:hover { transform:translateY(-3px); box-shadow:0 12px 32px rgba(0,0,0,.3); }
+.module-col .m-icon { font-size:2em; margin-bottom:8px; }
+.module-col .mh { font-weight:700; margin-bottom:6px; font-size:.98em; }
+.module-col .mb { font-size:.8em; color:var(--text2); line-height:1.5; }
+
+/* Tables */
+.table-wrap { overflow-x:auto; width:100%; max-width:960px; }
+table { width:100%; border-collapse:collapse; font-size:.85em; }
+th {
+  text-align:left; padding:10px 12px; border-bottom:1px solid var(--border2);
+  color:var(--accent); font-weight:700; font-size:.78em;
+  letter-spacing:.04em; text-transform:uppercase;
+}
+td { padding:10px 12px; border-bottom:1px solid var(--border); vertical-align:top; }
+tr:hover td { background:rgba(255,255,255,.012); }
+
+/* Compare */
+.compare-row { display:flex; gap:14px; width:100%; max-width:960px; }
+.compare-col {
+  flex:1; background:var(--surface2); border:1px solid var(--border);
+  border-radius:var(--radius-sm); padding:22px;
+  transition:transform .2s;
+}
+.compare-col:hover { transform:translateY(-2px); }
+
+/* Flow */
+.flow-step { display:flex; gap:8px; align-items:center; width:100%; max-width:960px; flex-wrap:wrap; justify-content:center; }
+.flow-step .fs {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--radius-sm); padding:14px 16px; text-align:center;
+  min-width:90px; font-size:.82em; transition:all .2s;
+}
+.flow-step .fs:hover { border-color:var(--accent); box-shadow:0 0 16px rgba(77,160,255,.08); }
+.flow-step .fs strong { display:block; font-size:1.15em; font-weight:800; margin-bottom:2px; background:linear-gradient(135deg,var(--accent),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.flow-step .fa { color:var(--muted); font-size:1em; font-weight:300; }
+
+/* Number badge */
+.num-badge {
+  display:inline-flex; align-items:center; justify-content:center;
+  width:26px; height:26px; border-radius:50%;
+  font-size:.78em; font-weight:800;
+  background:rgba(77,160,255,.12); color:var(--accent);
+}
+
+/* Stat row */
+.stat-row { display:flex; gap:20px; flex-wrap:wrap; justify-content:center; align-items:center; }
+.stat-item { text-align:center; min-width:80px; }
+.stat-item .sv { font-size:2.2em; font-weight:900; letter-spacing:-.02em; }
+.stat-item .sl { font-size:.78em; color:var(--muted); margin-top:2px; }
+
+/* Divider */
+.divider {
+  width:40px; height:2px; border-radius:1px;
+  background:linear-gradient(90deg, var(--accent), transparent);
+  margin:16px auto;
+}
+
+/* Animations */
+@keyframes ri { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+@keyframes si { from { opacity:0; transform:scale(.94); } to { opacity:1; transform:scale(1); } }
+@keyframes glPulse { 0%,100% { opacity:.05; } 50% { opacity:.1; } }
+.ar { animation:ri .5s ease both; } .ar1 { animation:ri .5s .08s ease both; }
+.ar2 { animation:ri .5s .16s ease both; } .ar3 { animation:ri .5s .24s ease both; }
+.ar4 { animation:ri .5s .32s ease both; } .as { animation:si .5s ease both; }
+
+@media (max-width:768px) {
+  .scene { padding:40px 16px 150px; }
+  .card { padding:24px 18px; }
+  h1 { font-size:1.6em; }
+  .grid-2,.grid-3,.grid-4,.compare-row { grid-template-columns:1fr; flex-direction:column; }
+  .narration-bar { bottom:110px; }
+}
+</style>
+</head>
+<body>
+
+<div class="bg-glow g1"></div>
+<div class="bg-glow g2"></div>
+
+<div class="topbar">
+  <span class="logo">《绿梦：时空之声》付费测前 · 线下CE方案</span>
+  <span class="ct" id="chapterTag">开篇</span>
+</div>
+<div class="progress-wrap"><div class="progress-fill" id="progressFill"></div></div>
+
+<div class="narration-bar" id="narrationBar">
+  <div class="nl">讲解</div>
+  <div class="nt" id="narrationText"></div>
+</div>
+
+<div style="position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:180;" class="timeline-dots" id="timelineDots"></div>
+
+<main class="stage" id="stage"></main>
+
+<nav class="controls">
+  <button class="btn" id="btnPrev">&lt;</button>
+  <button class="btn btn-play" id="btnPlay">Play</button>
+  <button class="btn" id="btnNext">&gt;</button>
+  <span style="color:var(--muted);font-size:.82em;min-width:48px;text-align:center;" id="timeDisplay">00:00</span>
+</nav>
+
+<script>
+function $(id) { return document.getElementById(id); }
+function H(arr) { return arr.join(''); }
+var sceneData = [];
+function S(c,d,n,h) { sceneData.push({chapter:c, duration:d, narration:n, html:h}); }
+
+// ---- HELPERS ----
+function T(label, color) { return '<span class="tag t'+color+'">'+label+'</span>'; }
+function IC(head, body, stat, statColor) {
+  var s = stat ? '<div class="ic-stat" style="background:rgba('+(statColor||'255,255,255')+',.06);color:var(--'+(statColor==='77,160,255'?'accent':statColor==='52,211,153'?'green':statColor==='248,113,113'?'red':statColor==='251,191,36'?'yellow':'muted')+');">'+stat+'</div>' : '';
+  return '<div class="issue-card"><div class="ic-head">'+head+'</div><div class="ic-body">'+body+'</div>'+s+'</div>';
+}
+function M(icon,head,body,tag,c) {
+  return '<div class="module-col" style="border-top:3px solid var(--'+c+');"><div class="m-icon">'+icon+'</div><div class="mh" style="color:var(--'+c+');">'+head+'</div><div class="mb">'+body+'</div><div style="margin-top:8px;">'+tag+'</div></div>';
+}
+function FS(num,time,desc) {
+  return '<div class="fs"><strong>'+num+'</strong>'+desc+'<span style="display:block;font-size:.72em;color:var(--muted);">'+time+'</span></div>';
+}
+
+// ============================================================
+// SCENES
+// ============================================================
+
+// 0 — Hero
+S('开篇', 7,
+  '《绿梦：时空之声》公测前最后一次CE。前序测试核心玩法已获验证，角色美术持续为亮点。但蚀梦测试也暴露出一系列关键问题——按键卡顿、战斗缺联动、养成太复杂、UI评分全模块最低。这次，我们带着基线和修复方案，重新对账。',
+  H([
+    '<div class="card car card-glow-a as" style="text-align:center;padding:48px;">',
+      '<div style="font-size:.78em;color:var(--accent);letter-spacing:.15em;margin-bottom:18px;font-weight:600;">PAID BETA · PRE-LAUNCH CE</div>',
+      '<h1 style="font-size:3em;margin-bottom:8px;">《绿梦：时空之声》</h1>',
+      '<p style="font-size:1.2em;color:var(--text2);letter-spacing:.04em;">横版箱庭闯关 × ACT战斗 · 付费系统首次验证</p>',
+      '<div class="divider"></div>',
+      '<div class="stat-row" style="margin-top:20px;">',
+        '<div class="stat-item"><div class="sv" style="color:var(--accent);">4</div><div class="sl">研究模块</div></div>',
+        '<div class="stat-item"><div class="sv" style="color:var(--purple);">18人</div><div class="sl">3组 × 7场</div></div>',
+        '<div class="stat-item"><div class="sv" style="color:var(--green);">2.5H</div><div class="sl">每组时长</div></div>',
+        '<div class="stat-item"><div class="sv" style="color:var(--yellow);">2天</div><div class="sl">执行完成</div></div>',
+      '</div>',
+    '</div>'
+  ])
+);
+
+// 1 — 蚀梦测试基线问题
+S('开篇', 10,
+  '先看蚀梦测试留下的账本。横版箱庭闯关加ACT的方向被多数玩家认可没错，但六项核心体验全都有债。UI全模块最低三点二四、养成六成二不满意、战斗近半不满、心流有三处明确下滑点。这次CE的核心任务，就是逐项对账——修了多少、还剩多少。',
+  H([
+    '<h2>蚀梦测试 · 遗留问题基线</h2>',
+    '<div class="grid-3">',
+      IC('按键适配', '移动端摇杆满意度 3.76<br>按键满意度 3.63<br>卡顿严重影响初期体验', '摇杆3.76 / 按键3.63', '251,191,36'),
+      IC('UI / UX 最低分', '全模块评分最低 <strong>3.24</strong><br>刻录抽卡UI &lt; 3.4<br>装备养成UI &lt; 3.4', '全模块最低 3.24', '248,113,113'),
+      IC('养成系统', '满意度 3.27<br><strong>62% 不满意</strong><br>70%玩家希望更简单', '62% 不满意', '248,113,113'),
+      IC('战斗体验', '满意度 3.50<br>47% 不满意 | 缺角色联动<br>高玩党评价最低', '47% 不满意', '251,191,36'),
+      IC('地图探索', '探索满意度 3.56<br>45% 不满意 | 主城跑图无聊<br>引导为最低分维度', '45% 不满意', '251,191,36'),
+      IC('新手引导 & 心流', '上手难度 3.60 | 33%教学不满<br><strong>三处心流下滑：</strong><br>奥鲁姆要塞→寻薇诺娜→护送', '三处心流拐点', '248,113,113'),
+    '</div>'
+  ])
+);
+
+// 2 — Four modules
+S('第1章 · 框架', 8,
+  '基于这些遗留问题，这次研究拆成四大模块。产品向，验证七项核心体验的修复效果。商业化向，第一次把抽卡和皮肤暴露给真实玩家。长期动力，看Day2之后还有没有继续玩的理由、NPS能不能从负的转正。竞品对比，四个圈层逐一确认——绿梦凭什么。',
+  H([
+    '<h2>四大研究模块</h2>',
+    '<div class="grid-4">',
+      M('01', '产品向', '7项核心体验<br>修复效果验证', T('模块一','a'), 'accent'),
+      M('02', '商业化向', '抽卡 + 皮肤商店<br>付费系统首次验证', T('模块二·新增','p'), 'purple'),
+      M('03', '长期动力', 'Day2持续 + NPS<br>流失风险预判', T('模块三','g'), 'green'),
+      M('04', '竞品对比', '差异化定位<br>四圈层对标', T('模块四','y'), 'yellow'),
+    '</div>',
+    '<div class="card-sm ar4" style="margin-top:12px;text-align:center;background:rgba(77,160,255,.03);border-color:rgba(77,160,255,.15);">',
+      '<p style="margin:0;font-size:.92em;color:var(--accent);">每个模块对应蚀梦测试量化基线 → 直接对账，看改善幅度</p>',
+    '</div>'
+  ])
+);
+
+// 3 — Module 1 detail
+S('第1章 · 产品向', 13,
+  '产品向七个验证点，每一个都有蚀梦基线做参照。最关键的三个：按键适配——移动端摇杆和右侧按键到底有没有改善；战斗联动——角色间连携策略性能不能被人感知到；养成复杂度——之前六成二不满意，这次降了多少。每个都用指纹评分直接对比。',
+  H([
+    '<h2>模块一 · 产品向：7项核心体验修复验证</h2>',
+    '<div class="table-wrap as"><table>',
+      '<thead><tr><th style="width:30px;"></th><th>研究问题</th><th style="width:240px;">核心关注点</th><th style="width:150px;">蚀梦基线</th></tr></thead><tbody>',
+      '<tr class="ar"><td><span class="num-badge">1</span></td><td><strong>按键 / 操作适配</strong></td><td style="font-size:.82em;">移动端摇杆配合流畅性 · 右侧按键布局 · 自定义方案满意度</td><td style="font-size:.8em;">摇杆满意度 3.76<br>按键满意度 3.63</td></tr>',
+      '<tr class="ar1"><td><span class="num-badge">2</span></td><td><strong>战斗体验</strong></td><td style="font-size:.82em;">角色连携/配队策略性 · 战斗信息提示 · 闪避与打击反馈</td><td style="font-size:.8em;">战斗 3.50<br>47% 不满意</td></tr>',
+      '<tr class="ar2"><td><span class="num-badge">3</span></td><td><strong>养成系统</strong></td><td style="font-size:.82em;">养成路径清晰度 · 资源获取难度 · 概念名词简化 · 素材副本效率</td><td style="font-size:.8em;">'+T('3.27 · 62%不满意','r')+'</td></tr>',
+      '<tr class="ar3"><td><span class="num-badge">4</span></td><td><strong>UI / UX</strong></td><td style="font-size:.82em;">主界面信息密度 · 关键入口可寻性 · 抽卡交互 · 战斗HUD</td><td style="font-size:.8em;">'+T('全模块最低 3.24','r')+'</td></tr>',
+      '<tr class="ar4"><td><span class="num-badge">5</span></td><td><strong>新手引导</strong></td><td style="font-size:.82em;">基础操作教学完成率 · 核心机制理解度 · 三处心流下滑改善</td><td style="font-size:.8em;">上手难度 3.60<br>33% 教学不满意</td></tr>',
+      '<tr><td><span class="num-badge">6</span></td><td><strong>地图探索</strong></td><td style="font-size:.82em;">地图指引清晰度 · 探索密度与奖励 · 平台跳跃接受度 · 主城记忆点</td><td style="font-size:.8em;">探索 3.56<br>45% 不满意</td></tr>',
+      '<tr><td><span class="num-badge">7</span></td><td><strong>剧情与演出</strong></td><td style="font-size:.82em;">新增剧情评价 · AVG沉浸感与动作表情 · 跳过灵活度 · 叙事风格接受度</td><td style="font-size:.8em;">配音高 / 沉浸感低<br>PC端跳过功能不满</td></tr>',
+      '</tbody></table></div>'
+  ])
+);
+
+// 4 — Module 2+3
+S('第2章 · 商业 + 留存', 12,
+  '先把商业化摸清楚。首次抽卡——玩家理不理解保底和概率？出货体感跟实际差多少？皮肤商店——定价跟竞品比贵了吗？有没有人愿意掏钱？然后看留存。NPS是这次的核心KPI——蚀梦基线负百分之二十以上，这次能不能转正，直接关系到公测信心。',
+  H([
+    '<h2>模块二 · 商业化向</h2>',
+    '<div class="grid-2" style="margin-bottom:16px;">',
+      '<div class="compare-col ar" style="border-top:3px solid var(--purple);"><div style="font-weight:700;margin-bottom:6px;color:var(--purple2);">2-1 抽卡体验</div><div style="font-size:.83em;color:var(--text2);line-height:1.6;">卡池机制理解度（保底/概率/UP）<br>抽卡动画仪式感满意度<br>出货率体感 vs 实际概率差距<br>副产物价值感知<br>角色池/武器池划分合理性</div><div style="margin-top:8px;">'+T('蚀梦TOP商业化痛点','r')+'</div></div>',
+      '<div class="compare-col ar1" style="border-top:3px solid var(--purple);"><div style="font-weight:700;margin-bottom:6px;color:var(--purple2);">2-2 皮肤商店</div><div style="font-size:.83em;color:var(--text2);line-height:1.6;">皮肤定价感知（与竞品对比）<br>皮肤设计吸引力<br>附加内容期待（特效/语音/动作）<br>限定/稀有的收藏驱动力</div></div>',
+    '</div>',
+    '<h2>模块三 · 长期动力</h2>',
+    '<div class="grid-3">',
+      '<div class="compare-col ar2" style="border-top:3px solid var(--green);"><div style="font-weight:700;margin-bottom:4px;color:var(--green2);">3-1 Day2 动力</div><div style="font-size:.82em;color:var(--text2);">角色养成深度 vs 负担<br>每日活跃内容吸引力<br>社交/公会系统粘性<br>版本活动期待度</div></div>',
+      '<div class="compare-col ar3" style="border-top:3px solid var(--yellow);"><div style="font-weight:700;margin-bottom:4px;color:var(--yellow2);">3-2 流失风险</div><div style="font-size:.82em;color:var(--text2);">心流图各节点流失意愿<br>流失原因分类<br>（内容耗尽/付费压力/<br>操作疲劳/竞品吸引）</div></div>',
+      '<div class="compare-col ar4" style="border-top:3px solid var(--accent);"><div style="font-weight:700;margin-bottom:4px;color:var(--accent2);">3-3 NPS · 核心KPI</div><div style="font-size:.82em;color:var(--text2);">蚀梦基线 NPS <strong style="color:var(--red);">-20% ~ -34%</strong><br>PC端尤差<br><strong style="color:#fff;">本次核心：能否转正？</strong></div></div>',
+    '</div>'
+  ])
+);
+
+// 5 — Module 4 competitor
+S('第2章 · 竞品', 9,
+  '竞品对比分四个圈层。硬核ACT拿去跟只狼黑神话对，传统横版跟DNF火影对，ARPG跟原神鸣潮对，泛二次元跟崩铁对。终极问题是同一个——我为什么放弃现在的游戏来玩绿梦？每个圈层有自己的对标对象和维度权重。',
+  H([
+    '<h2>模块四 · 竞品对比：四圈层对标</h2>',
+    '<div class="table-wrap as"><table>',
+      '<thead><tr><th>圈层</th><th style="width:120px;">用户画像</th><th style="width:200px;">竞品对标</th><th style="width:230px;">核心对比维度</th></tr></thead><tbody>',
+      '<tr class="ar"><td><strong style="color:var(--accent);">G1 硬核 ACT</strong></td><td style="font-size:.82em;">20-35岁 男性为主<br>追求高难度操作</td><td style="font-size:.8em;">只狼 / 艾尔登法环 / 黑神话悟空 / DNF端游 / 死亡细胞</td><td style="font-size:.82em;">战斗操作精度 · 打击反馈<br>BOSS挑战性 · 操作上限</td></tr>',
+      '<tr class="ar1"><td><strong style="color:var(--green);">G2 传统横版</strong></td><td style="font-size:.82em;">20-30岁<br>横版品类核心用户</td><td style="font-size:.8em;">DNF / 火影忍者手游 / 归龙潮 / 心渊梦境 / 时空猎人</td><td style="font-size:.82em;">横版闯关体验 · 连招爽感<br>角色技能设计 · 银恶契合度</td></tr>',
+      '<tr class="ar2"><td><strong style="color:var(--purple);">G3 ARPG</strong></td><td style="font-size:.82em;">18-30岁 男女均衡<br>月消费 >= 100元</td><td style="font-size:.8em;">原神 / 鸣潮 / 绝区零 / 崩铁 / 幻塔 / 蓝色星原</td><td style="font-size:.82em;">探索乐趣 · 角色养成与收集<br>剧情世界观 · 美术品质</td></tr>',
+      '<tr class="ar3"><td><strong style="color:var(--yellow);">G4 泛二次元</strong></td><td style="font-size:.82em;">二次元品类泛用户</td><td style="font-size:.8em;">崩铁 / FGO / 明日方舟</td><td style="font-size:.82em;">角色美术 · 世界观沉浸<br>养成策略深度</td></tr>',
+      '</tbody></table></div>',
+    '<div class="card-sm ar4" style="margin-top:8px;text-align:center;background:rgba(251,191,36,.03);border-color:rgba(251,191,36,.15);">',
+      '<p style="margin:0;font-size:.9em;"><strong style="color:var(--yellow);">终极问题：</strong>玩家为何选绿梦而不选竞品？品类迁移意愿有多强？</p>',
+    '</div>'
+  ])
+);
+
+// 6 — Design
+S('第3章 · 设计', 10,
+  '研究设计沿用了八月CE的四圈层分组框架。每组六人，根据蚀梦测试参与经历分成两场——老玩家一场、新玩家一场。执行方式依然是线下焦点小组座谈会，每组二点五小时，比八月多了半小时，主要给商业化自然暴露和第二章新内容的体验覆盖。',
+  H([
+    '<h2>研究设计：3组 × 7场 = 18人</h2>',
+    '<div class="table-wrap as"><table>',
+      '<thead><tr><th>分组</th><th style="width:140px;">用户画像</th><th style="width:170px;">竞品对标</th><th style="width:130px;">招募关键条件</th><th style="width:70px;">人数</th></tr></thead><tbody>',
+      '<tr class="ar"><td><strong style="color:var(--accent);">G1 硬核 ACT</strong></td><td style="font-size:.82em;">追求高难度操作<br>20-35岁 男性为主</td><td style="font-size:.8em;">只狼 / 法环 / 黑神话</td><td style="font-size:.8em;">ACT/魂类深度体验<br>对操作有明确评价标准</td><td style="font-weight:800;color:var(--accent);">6人×2组</td></tr>',
+      '<tr class="ar1"><td><strong style="color:var(--green);">G2 传统横版</strong></td><td style="font-size:.82em;">横版动作核心用户<br>20-30岁</td><td style="font-size:.8em;">DNF / 火影 / 归龙潮</td><td style="font-size:.8em;">横版品类深度用户<br>有横版肌肉记忆</td><td style="font-weight:800;color:var(--green);">6人×2组</td></tr>',
+      '<tr class="ar2"><td><strong style="color:var(--purple);">G3 ARPG</strong></td><td style="font-size:.82em;">二次元ARPG/开放世界<br>18-30岁 男女均衡</td><td style="font-size:.8em;">原神 / 鸣潮 / 绝区零</td><td style="font-size:.8em;">品类深度用户<br>月消费 >= 100元</td><td style="font-weight:800;color:var(--purple);">6人×2组</td></tr>',
+      '<tr class="ar3"><td><strong style="color:var(--yellow);">G4 泛二次元</strong></td><td style="font-size:.82em;">二次元品类泛用户</td><td style="font-size:.8em;">崩铁 / FGO / 明日方舟</td><td style="font-size:.8em;">二次元品类用户</td><td style="font-weight:800;color:var(--yellow);">6人×1组</td></tr>',
+      '</tbody></table></div>',
+    '<div class="card-sm ar4" style="margin-top:8px;text-align:center;">',
+      '<p style="margin:0;font-size:.9em;">线下焦点小组座谈会 · 2.5H/组 · 7场 · 2天完成 &nbsp;|&nbsp; <span style="color:var(--yellow);">比8月CE +30min（商业化自然暴露 + 第二章新内容）</span></p>',
+    '</div>'
+  ])
+);
+
+// 7 — Execution
+S('第3章 · 执行', 13,
+  '执行流程七个环节。四十分钟自由体验覆盖序章和第一章前半——这里是蚀梦测试心流下滑的重灾区。中场后第二阶段三十分钟，商城、抽卡、战令入口自然打开，观察玩家的第一反应。最后四十五分钟深访分成四个十分钟小节，产品、商业、留存、竞品逐个追问。三角验证贯穿全程。',
+  H([
+    '<h2>执行流程：7个环节 · 2.5H/组</h2>',
+    '<div class="flow-step as" style="margin-bottom:14px;">',
+      FS('1','10min','暖场 + 破冰<br>获取玩家基线'),
+      '<span class="fa">→</span>',
+      FS('2','40min','自由体验 I<br>序章→第一章前半'),
+      '<span class="fa">→</span>',
+      FS('3','10min','问卷 #1<br>即时体验反馈'),
+      '<span class="fa">→</span>',
+      FS('4','30min','自由体验 II<br>BOSS战→第二章<br><span style="font-size:.7em;color:var(--purple);">付费入口自然暴露</span>'),
+      '<span class="fa">→</span>',
+      FS('5','5min','问卷 #2<br>商业化+动力'),
+      '<span class="fa">→</span>',
+      FS('6','45min','深访访谈<br>4小节模块化追问'),
+      '<span class="fa">→</span>',
+      FS('7','10min','自由 Q&A<br>收尾+开放建议'),
+    '</div>',
+    '<div class="card-sm ar4" style="text-align:center;background:rgba(77,160,255,.03);border-color:rgba(77,160,255,.15);">',
+      '<p style="margin:0;font-size:.9em;"><strong style="color:var(--accent);">三角验证：</strong>行为观察（操作困难/心流拐点） + 定量评分（分模块指纹打分 1-5） + 定性深访（对比蚀梦基线追问）</p>',
+    '</div>'
+  ])
+);
+
+// 8 — Test content
+S('第3章 · 内容', 8,
+  '测试版本从PV开场到肉鸽玩法，分七个阶段依次开放。序章是重点——蚀梦测试三个心流下滑点全在这里。第二章瓦尔肯要塞是新增内容，第一次暴露。肉鸽也是全新的玩法模块。每个阶段有明确的时长预估和对应的研究模块。',
+  H([
+    '<h2>测试版本开放内容</h2>',
+    '<div class="table-wrap as"><table>',
+      '<thead><tr><th style="width:50px;">阶段</th><th>开放内容</th><th style="width:55px;">时长</th><th>对应模块</th></tr></thead><tbody>',
+      '<tr class="ar"><td><strong>一</strong></td><td>PV开场动画 + 登录界面</td><td>5min</td><td>第一印象 / 美术吸引力</td></tr>',
+      '<tr class="ar1"><td><strong>二</strong></td><td>新手引导教程（基础操作：闪避/攻击/技能/切换）</td><td>10min</td><td>模块一：操作上手</td></tr>',
+      '<tr class="ar2"><td><strong>三</strong></td><td>'+T('序章','r')+' 奥鲁姆要塞初入 → 寻找薇诺娜 → 护送仓库管理员</td><td>20min</td><td>模块一：<strong>心流拐点验证</strong></td></tr>',
+      '<tr class="ar3"><td><strong>四</strong></td><td>第一章前半（探索 → 杂兵战 → 平台跳跃 → 养成教学）</td><td>20min</td><td>模块一：战斗联动/养成/探索</td></tr>',
+      '<tr class="ar4"><td><strong>五</strong></td><td>第一章 BOSS 战（第一个主线BOSS）</td><td>10min</td><td>模块一：战斗深度与挑战性</td></tr>',
+      '<tr><td><strong>六</strong></td><td>'+T('第二章部分关卡','p')+'（新增内容 · 瓦尔肯要塞）</td><td>15min</td><td>模块二：付费首次暴露</td></tr>',
+      '<tr><td><strong>七</strong></td><td>'+T('肉鸽玩法','p')+'（新玩法模块）</td><td>10min</td><td>模块三：新内容活动</td></tr>',
+      '</tbody></table></div>'
+  ])
+);
+
+// 9 — Timeline
+S('总结', 9,
+  '排期。T减四周方案确认，T减三周启动招募。执行日两天跑完七场。T加两天出快速结论——TOP痛点和商业化信号第一时间同步业务方。T加一周完整报告交付。整个研究从方案到终报，一个月。',
+  H([
+    '<h2>时间规划：T-4W → T+1W</h2>',
+    '<div class="table-wrap as"><table>',
+      '<thead><tr><th style="width:75px;">时间</th><th>事项</th><th style="width:190px;">交付物</th></tr></thead><tbody>',
+      '<tr class="ar"><td><strong>T-4 周</strong></td><td>研究方案确认 + 招募问卷定稿</td><td style="color:var(--text2);">研究方案 · 招募问卷</td></tr>',
+      '<tr class="ar1"><td><strong>T-3 周</strong></td><td>招募启动 + 深访大纲初稿</td><td style="color:var(--text2);">深访大纲 V1 · 招募进度</td></tr>',
+      '<tr class="ar2"><td><strong>T-2 周</strong></td><td>招募完成 + 大纲预演 + 版本 check</td><td style="color:var(--text2);">深访大纲终版 · 版本验收</td></tr>',
+      '<tr class="ar3"><td><strong>T-1 周</strong></td><td>测试版本 Release + 场地/设备确认</td><td style="color:var(--text2);">版本就绪确认</td></tr>',
+      '<tr class="ar4"><td><strong>T=0</strong></td><td>'+T('执行日','a')+' Day1 + Day2 线下执行</td><td style="color:var(--text2);">原始数据（观察/问卷/录音）</td></tr>',
+      '<tr><td><strong>T+2 天</strong></td><td>'+T('快速结论输出','y')+'</td><td style="color:var(--text2);">TOP痛点 + 商业化信号清单</td></tr>',
+      '<tr><td><strong>T+1 周</strong></td><td>'+T('完整报告输出','g')+'</td><td style="color:var(--text2);">CE测试完整报告</td></tr>',
+      '</tbody></table></div>'
+  ])
+);
+
+// 10 — Summary
+S('总结', 7,
+  '总结一下。付费测前最后一次CE，四大模块、三组七场、十八人、两天跑完。最终回答三个问题：产品修复还欠多少债、商业化第一次给玩家看他们买不买账、NPS能不能从负的转正。以上，欢迎提问。',
+  H([
+    '<div class="card card-glow-a as" style="text-align:center;padding:44px;">',
+      '<div style="font-size:.78em;color:var(--accent);letter-spacing:.12em;margin-bottom:16px;font-weight:600;">SUMMARY</div>',
+      '<h2 style="border:none;padding:0;font-size:1.9em;background:none;-webkit-text-fill-color:var(--accent);">产品修复合账<br>+ 商业化首次摸底<br>+ 留存信号预判</h2>',
+      '<div class="divider"></div>',
+      '<div class="stat-row" style="margin-top:16px;">',
+        '<div class="stat-item ar"><div class="sv" style="color:var(--accent);">4</div><div class="sl">研究模块</div></div>',
+        '<div class="stat-item ar1"><div class="sv" style="color:var(--purple);">18人</div><div class="sl">3组 × 7场</div></div>',
+        '<div class="stat-item ar2"><div class="sv" style="color:var(--green);">2.5H</div><div class="sl">每组时长</div></div>',
+        '<div class="stat-item ar3"><div class="sv" style="color:var(--yellow);">2天</div><div class="sl">执行完成</div></div>',
+      '</div>',
+      '<p style="margin-top:20px;color:var(--muted);font-size:.8em;">lvmen_ce_report_v2.html &nbsp;|&nbsp; 空格播放 · 左右键翻页 · Esc停止</p>',
+    '</div>'
+  ])
+);
+
+// ============================================================
+// ENGINE
+// ============================================================
+var currentIdx = 0;
+var playing = false;
+var sceneTimer = null;
+var elapsedInScene = 0;
+var tickInterval = null;
+
+var $stage = $('stage');
+var $narrationBar = $('narrationBar');
+var $narrationText = $('narrationText');
+var $chapterTag = $('chapterTag');
+var $progressFill = $('progressFill');
+var $timeDisplay = $('timeDisplay');
+var $timelineDots = $('timelineDots');
+var $btnPlay = $('btnPlay');
+var $btnPrev = $('btnPrev');
+var $btnNext = $('btnNext');
+
+sceneData.forEach(function(s, i) {
+  var dot = document.createElement('span');
+  dot.className = 'tl-dot';
+  dot.title = 'Scene ' + (i+1) + ': ' + s.chapter;
+  dot.onclick = (function(idx) { return function() { goTo(idx); }; })(i);
+  $timelineDots.appendChild(dot);
+});
+
+sceneData.forEach(function(s, i) {
+  var el = document.createElement('div');
+  el.className = 'scene';
+  el.id = 'scene-' + i;
+  $stage.appendChild(el);
+});
+
+function renderScene(i) {
+  var el = $('scene-' + i);
+  el.innerHTML = '<div class="cm">' + sceneData[i].chapter + '</div>' + sceneData[i].html;
+}
+
+function showScene(i) {
+  var all = document.querySelectorAll('.scene');
+  for (var j = 0; j < all.length; j++) { all[j].classList.remove('on'); }
+  renderScene(i);
+  var el = $('scene-' + i);
+  requestAnimationFrame(function() { el.classList.add('on'); });
+  $narrationText.textContent = sceneData[i].narration;
+  $narrationBar.classList.add('on');
+  $chapterTag.textContent = sceneData[i].chapter;
+  var dots = document.querySelectorAll('.tl-dot');
+  for (var j = 0; j < dots.length; j++) {
+    dots[j].className = 'tl-dot';
+    if (j < i) dots[j].classList.add('done');
+    if (j === i) dots[j].classList.add('cur');
+  }
+  $progressFill.style.width = ((i+1) / sceneData.length * 100) + '%';
+}
+
+function goTo(i) {
+  if (i < 0 || i >= sceneData.length) return;
+  stopAuto();
+  currentIdx = i;
+  elapsedInScene = 0;
+  showScene(i);
+  updateTime();
+  updateButtons();
+}
+
+function updateTime() {
+  var m = Math.floor(elapsedInScene / 60);
+  var s = elapsedInScene % 60;
+  $timeDisplay.textContent = (m < 10 ? '0' + m : m) + ':' + (s < 10 ? '0' + s : s);
+}
+
+function updateButtons() {
+  $btnPrev.disabled = (currentIdx === 0);
+  $btnNext.disabled = (currentIdx === sceneData.length - 1);
+}
+
+function stopAuto() {
+  playing = false;
+  clearTimeout(sceneTimer);
+  clearInterval(tickInterval);
+  $btnPlay.textContent = 'Play';
+}
+
+function startAuto() {
+  if (currentIdx >= sceneData.length - 1) { currentIdx = 0; showScene(0); }
+  playing = true;
+  $btnPlay.textContent = 'Pause';
+  scheduleNext();
+  tickInterval = setInterval(function() {
+    elapsedInScene++;
+    updateTime();
+    if (elapsedInScene > sceneData[currentIdx].duration + 2) {
+      if (currentIdx < sceneData.length - 1) { goTo(currentIdx + 1); if (playing) scheduleNext(); }
+      else stopAuto();
+    }
+  }, 1000);
+}
+
+function scheduleNext() {
+  clearTimeout(sceneTimer);
+  sceneTimer = setTimeout(function() {
+    if (!playing) return;
+    if (currentIdx < sceneData.length - 1) { goTo(currentIdx + 1); scheduleNext(); }
+    else stopAuto();
+  }, sceneData[currentIdx].duration * 1000);
+}
+
+var controls = {
+  toggle: function() { if (playing) stopAuto(); else startAuto(); },
+  next: function() { stopAuto(); goTo(currentIdx + 1); },
+  prev: function() { stopAuto(); goTo(currentIdx - 1); }
+};
+
+$btnPlay.onclick = controls.toggle;
+$btnPrev.onclick = controls.prev;
+$btnNext.onclick = controls.next;
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === ' ' || e.key === 'Spacebar') { e.preventDefault(); controls.toggle(); }
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); controls.next(); }
+  if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   { e.preventDefault(); controls.prev(); }
+  if (e.key === 'Escape') stopAuto();
+});
+
+$btnPlay.textContent = 'Play';
+$btnPrev.textContent = '<';
+$btnNext.textContent = '>';
+goTo(0);
+updateButtons();
+</script>
+</body>
+</html>

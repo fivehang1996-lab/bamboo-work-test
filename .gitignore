@@ -1,0 +1,19 @@
+# 依赖
+node_modules/
+
+# 大文件（视频）
+工作区/videos/
+scripts/frames_ywzh/*.mp4
+scripts/frames_ywzh/*.m4a
+
+# 原始数据（太大，且会频繁变动）
+问卷数据/焕梦好游快爆_原始.csv
+
+# 临时文件
+*.tmp
+*.lock
+scheduled_tasks.lock
+
+# 系统文件
+Thumbs.db
+Desktop.ini

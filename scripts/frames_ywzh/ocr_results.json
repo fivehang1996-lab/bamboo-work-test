@@ -1,0 +1,952 @@
+[
+  {
+    "frame": "f00000.png",
+    "texts": [
+      {
+        "text": "迪恩土豆派",
+        "conf": 0.91
+      }
+    ]
+  },
+  {
+    "frame": "f00090.png",
+    "texts": [
+      {
+        "text": "帮你轻松获取三测资格",
+        "conf": 0.96
+      }
+    ]
+  },
+  {
+    "frame": "f00135.png",
+    "texts": [
+      {
+        "text": "迪恩土豆派",
+        "conf": 0.91
+      },
+      {
+        "text": "测试详情",
+        "conf": 0.98
+      },
+      {
+        "text": "报名截止时间",
+        "conf": 0.94
+      },
+      {
+        "text": "2026.05.2523:59",
+        "conf": 0.99
+      },
+      {
+        "text": "测试类型",
+        "conf": 0.99
+      },
+      {
+        "text": "删档计费",
+        "conf": 0.96
+      },
+      {
+        "text": "招募人数",
+        "conf": 0.97
+      },
+      {
+        "text": "99999",
+        "conf": 0.64
+      },
+      {
+        "text": "适配情况",
+        "conf": 0.97
+      },
+      {
+        "text": "PC  安卓",
+        "conf": 0.45
+      }
+    ]
+  },
+  {
+    "frame": "f00180.png",
+    "texts": [
+      {
+        "text": "bibli",
+        "conf": 0.36
+      },
+      {
+        "text": "测试详情",
+        "conf": 0.98
+      },
+      {
+        "text": "报名截止时间",
+        "conf": 0.93
+      },
+      {
+        "text": "2026.05.2523:59",
+        "conf": 0.95
+      },
+      {
+        "text": "测试类型",
+        "conf": 1.0
+      },
+      {
+        "text": "删档计费",
+        "conf": 0.96
+      },
+      {
+        "text": "招募人数",
+        "conf": 0.96
+      },
+      {
+        "text": "99999",
+        "conf": 0.6
+      },
+      {
+        "text": "适配情况",
+        "conf": 0.98
+      },
+      {
+        "text": "PC  安卓",
+        "conf": 0.53
+      },
+      {
+        "text": "别看破晓号测试招募船长10万+",
+        "conf": 0.95
+      }
+    ]
+  },
+  {
+    "frame": "f00225.png",
+    "texts": [
+      {
+        "text": "迪恩土豆派",
+        "conf": 0.9
+      },
+      {
+        "text": "bibili",
+        "conf": 0.43
+      },
+      {
+        "text": "但总有大气运者与众不同",
+        "conf": 0.82
+      }
+    ]
+  },
+  {
+    "frame": "f00270.png",
+    "texts": [
+      {
+        "text": "迪恩土豆派",
+        "conf": 0.92
+      }
+    ]
+  },
+  {
+    "frame": "f00315.png",
+    "texts": [
+      {
+        "text": "迪恩土豆派",
+        "conf": 0.94
+      },
+      {
+        "text": "为了不让你",
+        "conf": 0.98
+      },
+      {
+        "text": "'脱颖而出\"",
+        "conf": 0.87
+      }
+    ]
+  },
+  {
+    "frame": "f00360.png",
+    "texts": [
+      {
+        "text": "迪恩土豆派",
+        "conf": 0.95
+      },
+      {
+        "text": "bibili",
+        "conf": 0.38
+      },
+      {
+        "text": "是时候掏出我的焚决了",
+        "conf": 0.93
+      }
+    ]
+  },
+  {
+    "frame": "f00405.png",
+    "texts": [
+      {
+        "text": "立即预约",
+        "conf": 0.82
+      },
+      {
+        "text": "参与招募",
+        "conf": 0.39
+      },
+      {
+        "text": "资格查询",
+        "conf": 0.77
+      },
+      {
+        "text": "测讨",
+        "conf": 0.61
+      }
+    ]
+  },
+  {
+    "frame": "f00450.png",
+    "texts": [
+      {
+        "text": "立即预约",
+        "conf": 0.94
+      },
+      {
+        "text": "参与招募",
+        "conf": 0.45
+      },
+      {
+        "text": "资格查询",
+        "conf": 0.68
+      },
+      {
+        "text": "测讨",
+        "conf": 0.46
+      }
+    ]
+  },
+  {
+    "frame": "f00495.png",
+    "texts": [
+      {
+        "text": "立即预约",
+        "conf": 0.94
+      },
+      {
+        "text": "参与招募",
+        "conf": 0.37
+      },
+      {
+        "text": "资格查询",
+        "conf": 0.67
+      },
+      {
+        "text": "测试",
+        "conf": 0.78
+      }
+    ]
+  },
+  {
+    "frame": "f00540.png",
+    "texts": [
+      {
+        "text": "恩土豆派",
+        "conf": 0.9
+      },
+      {
+        "text": "bibili",
+        "conf": 0.31
+      }
+    ]
+  },
+  {
+    "frame": "f00585.png",
+    "texts": [
+      {
+        "text": "恩土豆派",
+        "conf": 0.96
+      },
+      {
+        "text": "bibii",
+        "conf": 0.34
+      }
+    ]
+  },
+  {
+    "frame": "f00630.png",
+    "texts": [
+      {
+        "text": "恩土豆派",
+        "conf": 0.93
+      },
+      {
+        "text": "手玑",
+        "conf": 0.32
+      },
+      {
+        "text": "下-m",
+        "conf": 0.38
+      }
+    ]
+  },
+  {
+    "frame": "f00675.png",
+    "texts": [
+      {
+        "text": "恩土豆派",
+        "conf": 0.95
+      },
+      {
+        "text": "手玑",
+        "conf": 0.3
+      },
+      {
+        "text": "下-m",
+        "conf": 0.38
+      }
+    ]
+  },
+  {
+    "frame": "f00720.png",
+    "texts": [
+      {
+        "text": "迪恩土豆派",
+        "conf": 0.93
+      },
+      {
+        "text": "UUT",
+        "conf": 0.31
+      },
+      {
+        "text": "CPU",
+        "conf": 1.0
+      },
+      {
+        "text": "GPU",
+        "conf": 1.0
+      },
+      {
+        "text": "1OCR",
+        "conf": 0.36
+      },
+      {
+        "text": "]",
+        "conf": 0.34
+      },
+      {
+        "text": "4",
+        "conf": 0.88
+      }
+    ]
+  },
+  {
+    "frame": "f00765.png",
+    "texts": [
+      {
+        "text": "迪恩土豆派",
+        "conf": 0.87
+      },
+      {
+        "text": "bilbili",
+        "conf": 0.38
+      },
+      {
+        "text": "(UFI:",
+        "conf": 0.4
+      },
+      {
+        "text": "CPU",
+        "conf": 0.99
+      },
+      {
+        "text": "GPU",
+        "conf": 1.0
+      },
+      {
+        "text": "1'",
+        "conf": 0.6
+      }
+    ]
+  },
+  {
+    "frame": "f00810.png",
+    "texts": [
+      {
+        "text": "迪恩土豆派",
+        "conf": 0.93
+      },
+      {
+        "text": "(UFI:",
+        "conf": 0.4
+      },
+      {
+        "text": "CPU",
+        "conf": 0.99
+      },
+      {
+        "text": "GPU",
+        "conf": 1.0
+      }
+    ]
+  },
+  {
+    "frame": "f00855.png",
+    "texts": [
+      {
+        "text": "恩土豆派",
+        "conf": 0.86
+      },
+      {
+        "text": "bibili",
+        "conf": 0.43
+      }
+    ]
+  },
+  {
+    "frame": "f00900.png",
+    "texts": [
+      {
+        "text": "恩土豆派",
+        "conf": 0.92
+      },
+      {
+        "text": "bbili",
+        "conf": 0.34
+      },
+      {
+        "text": "华",
+        "conf": 0.88
+      },
+      {
+        "text": "OPpO",
+        "conf": 0.38
+      }
+    ]
+  },
+  {
+    "frame": "f00945.png",
+    "texts": [
+      {
+        "text": "恩土豆派",
+        "conf": 0.89
+      },
+      {
+        "text": "小",
+        "conf": 0.61
+      }
+    ]
+  },
+  {
+    "frame": "f00990.png",
+    "texts": [
+      {
+        "text": "恩土豆派",
+        "conf": 0.82
+      },
+      {
+        "text": "bibili",
+        "conf": 0.31
+      }
+    ]
+  },
+  {
+    "frame": "f01035.png",
+    "texts": [
+      {
+        "text": "恩土豆派",
+        "conf": 0.83
+      },
+      {
+        "text": "华为",
+        "conf": 0.5
+      }
+    ]
+  },
+  {
+    "frame": "f01080.png",
+    "texts": [
+      {
+        "text": "恩土豆派",
+        "conf": 0.89
+      },
+      {
+        "text": "bibili",
+        "conf": 0.43
+      },
+      {
+        "text": "0330",
+        "conf": 0.48
+      }
+    ]
+  },
+  {
+    "frame": "f01125.png",
+    "texts": [
+      {
+        "text": "恩土豆派",
+        "conf": 0.89
+      },
+      {
+        "text": "bibili",
+        "conf": 0.31
+      },
+      {
+        "text": "击",
+        "conf": 0.92
+      }
+    ]
+  },
+  {
+    "frame": "f01170.png",
+    "texts": [
+      {
+        "text": "恩土豆派",
+        "conf": 0.95
+      },
+      {
+        "text": "击",
+        "conf": 0.92
+      }
+    ]
+  },
+  {
+    "frame": "f01215.png",
+    "texts": [
+      {
+        "text": "恩土豆派",
+        "conf": 0.87
+      }
+    ]
+  },
+  {
+    "frame": "f01260.png",
+    "texts": [
+      {
+        "text": "恩土豆派",
+        "conf": 0.91
+      },
+      {
+        "text": "bibili",
+        "conf": 0.31
+      }
+    ]
+  },
+  {
+    "frame": "f01305.png",
+    "texts": [
+      {
+        "text": "恩土豆派",
+        "conf": 0.88
+      },
+      {
+        "text": "bibli",
+        "conf": 0.32
+      }
+    ]
+  },
+  {
+    "frame": "f01350.png",
+    "texts": [
+      {
+        "text": "恩土豆派",
+        "conf": 0.91
+      },
+      {
+        "text": "(",
+        "conf": 0.53
+      }
+    ]
+  },
+  {
+    "frame": "f01395.png",
+    "texts": [
+      {
+        "text": "恩土豆派",
+        "conf": 0.92
+      },
+      {
+        "text": "(",
+        "conf": 0.53
+      }
+    ]
+  },
+  {
+    "frame": "f01440.png",
+    "texts": [
+      {
+        "text": "恩土豆派",
+        "conf": 0.8
+      },
+      {
+        "text": "bibili",
+        "conf": 0.32
+      },
+      {
+        "text": "(",
+        "conf": 0.53
+      }
+    ]
+  },
+  {
+    "frame": "f01485.png",
+    "texts": [
+      {
+        "text": "恩土豆派",
+        "conf": 0.9
+      }
+    ]
+  },
+  {
+    "frame": "f01530.png",
+    "texts": [
+      {
+        "text": "恩土豆派",
+        "conf": 0.9
+      },
+      {
+        "text": "bibili",
+        "conf": 0.35
+      },
+      {
+        "text": "下m",
+        "conf": 0.31
+      }
+    ]
+  },
+  {
+    "frame": "f01575.png",
+    "texts": [
+      {
+        "text": "恩土豆派",
+        "conf": 0.88
+      },
+      {
+        "text": "应用离店",
+        "conf": 0.31
+      }
+    ]
+  },
+  {
+    "frame": "f01620.png",
+    "texts": [
+      {
+        "text": "恩土豆派",
+        "conf": 0.93
+      },
+      {
+        "text": "应用离店",
+        "conf": 0.31
+      },
+      {
+        "text": "嘿嘿嘿嘿嘿嘿",
+        "conf": 1.0
+      }
+    ]
+  },
+  {
+    "frame": "f01665.png",
+    "texts": [
+      {
+        "text": "恩土豆派",
+        "conf": 0.83
+      },
+      {
+        "text": "bibili",
+        "conf": 0.46
+      },
+      {
+        "text": "嘿嘿嘿嘿嘿嘿",
+        "conf": 1.0
+      }
+    ]
+  },
+  {
+    "frame": "f01710.png",
+    "texts": [
+      {
+        "text": "恩土豆派",
+        "conf": 0.92
+      },
+      {
+        "text": "bibili",
+        "conf": 0.45
+      },
+      {
+        "text": "1990",
+        "conf": 0.98
+      },
+      {
+        "text": "1999",
+        "conf": 0.96
+      },
+      {
+        "text": "191",
+        "conf": 0.41
+      },
+      {
+        "text": "1991",
+        "conf": 0.84
+      },
+      {
+        "text": "199",
+        "conf": 0.95
+      },
+      {
+        "text": "1993",
+        "conf": 0.68
+      },
+      {
+        "text": "1990",
+        "conf": 0.45
+      },
+      {
+        "text": "I",
+        "conf": 0.91
+      },
+      {
+        "text": "1995",
+        "conf": 0.76
+      }
+    ]
+  },
+  {
+    "frame": "f01755.png",
+    "texts": [
+      {
+        "text": "恩土豆派",
+        "conf": 0.88
+      },
+      {
+        "text": "00g",
+        "conf": 0.3
+      }
+    ]
+  },
+  {
+    "frame": "f01800.png",
+    "texts": [
+      {
+        "text": "恩土豆派",
+        "conf": 0.91
+      },
+      {
+        "text": "O",
+        "conf": 0.51
+      }
+    ]
+  },
+  {
+    "frame": "f01845.png",
+    "texts": [
+      {
+        "text": "恩土豆派",
+        "conf": 0.91
+      },
+      {
+        "text": "bibili",
+        "conf": 0.32
+      },
+      {
+        "text": "O",
+        "conf": 0.51
+      }
+    ]
+  },
+  {
+    "frame": "f01890.png",
+    "texts": [
+      {
+        "text": "立即预约",
+        "conf": 0.88
+      },
+      {
+        "text": "参与招募",
+        "conf": 0.49
+      },
+      {
+        "text": "资格查询",
+        "conf": 0.77
+      },
+      {
+        "text": "测讨",
+        "conf": 0.39
+      }
+    ]
+  },
+  {
+    "frame": "f01935.png",
+    "texts": [
+      {
+        "text": "立即预约",
+        "conf": 0.87
+      },
+      {
+        "text": "参与招募",
+        "conf": 0.68
+      },
+      {
+        "text": "资格查询",
+        "conf": 0.73
+      },
+      {
+        "text": "测讨",
+        "conf": 0.31
+      }
+    ]
+  },
+  {
+    "frame": "f01980.png",
+    "texts": [
+      {
+        "text": "循着人声。解锁红包宝藏!",
+        "conf": 0.35
+      },
+      {
+        "text": "收录气泡声音",
+        "conf": 0.87
+      }
+    ]
+  },
+  {
+    "frame": "f02025.png",
+    "texts": [
+      {
+        "text": "循着人声。解锁红包宝藏!",
+        "conf": 0.35
+      },
+      {
+        "text": "收录气泡声音",
+        "conf": 0.87
+      },
+      {
+        "text": "我的奖品",
+        "conf": 0.93
+      }
+    ]
+  },
+  {
+    "frame": "f02070.png",
+    "texts": [
+      {
+        "text": "迪恩土豆派",
+        "conf": 0.92
+      },
+      {
+        "text": "bibili",
+        "conf": 0.4
+      },
+      {
+        "text": "抽取福利",
+        "conf": 0.83
+      },
+      {
+        "text": "点击",
+        "conf": 0.95
+      },
+      {
+        "text": "抽奖",
+        "conf": 0.99
+      }
+    ]
+  },
+  {
+    "frame": "f02115.png",
+    "texts": [
+      {
+        "text": "迪恩土豆派",
+        "conf": 0.92
+      },
+      {
+        "text": "bibli",
+        "conf": 0.38
+      },
+      {
+        "text": "抽取福利",
+        "conf": 0.9
+      },
+      {
+        "text": "过几天收到资格记得好评如潮",
+        "conf": 0.63
+      }
+    ]
+  },
+  {
+    "frame": "f02160.png",
+    "texts": [
+      {
+        "text": "迪恩土豆派",
+        "conf": 0.94
+      },
+      {
+        "text": "bibili",
+        "conf": 0.46
+      },
+      {
+        "text": "如果你还是不放心",
+        "conf": 0.94
+      }
+    ]
+  },
+  {
+    "frame": "f02205.png",
+    "texts": [
+      {
+        "text": "迪恩土豆派",
+        "conf": 0.94
+      },
+      {
+        "text": "bibili",
+        "conf": 0.35
+      }
+    ]
+  },
+  {
+    "frame": "f02250.png",
+    "texts": [
+      {
+        "text": "迪恩土豆派",
+        "conf": 0.93
+      }
+    ]
+  },
+  {
+    "frame": "f02295.png",
+    "texts": [
+      {
+        "text": "迪恩土豆派",
+        "conf": 0.93
+      },
+      {
+        "text": "[及游戏社区平台",
+        "conf": 0.31
+      }
+    ]
+  },
+  {
+    "frame": "f02340.png",
+    "texts": [
+      {
+        "text": "迪恩土豆派",
+        "conf": 0.93
+      },
+      {
+        "text": "搜索遗忘之海测试",
+        "conf": 0.66
+      }
+    ]
+  },
+  {
+    "frame": "f02385.png",
+    "texts": [
+      {
+        "text": "迪恩土豆派",
+        "conf": 0.93
+      },
+      {
+        "text": "填写各平台的问卷",
+        "conf": 0.97
+      }
+    ]
+  },
+  {
+    "frame": "f02430.png",
+    "texts": [
+      {
+        "text": "迪恩土豆派",
+        "conf": 0.92
+      },
+      {
+        "text": "bibili",
+        "conf": 0.35
+      }
+    ]
+  }
+]
