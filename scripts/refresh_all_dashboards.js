@@ -420,6 +420,7 @@ var DATA = ${JSON.stringify(chartsData)};
 var CHS = ${JSON.stringify(chs.map(ch => ({ key:ch.key, name:ch.name })))};
 var green='#66bb6a', red='#ef5350', blue='#4fc3f7', orange='#ffa726';
 var catQuality='#4fc3f7', catIdentity='#66bb6a', catDevice='#ffa726';
+var catColors = { quality: catQuality, identity: catIdentity, device: catDevice };
 var refreshInterval = ${intervalMin};
 
 // ====== Tab switch ======
