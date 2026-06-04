@@ -171,6 +171,75 @@ function cleanSurvey(csvPath, label) {
   };
 }
 
+// ======================== 跨渠道去重 ========================
+function dedupAcrossChannels(results) {
+  // 从各渠道有效答卷中提取手机号
+  // 优先保留：TapTap(priority=1) > 好游快爆(2) > 主站(3)
+  const phoneMap = new Map(); // phone → { channel, phone }
+  const chCounts = { tap: 0, haoyou: 0, main: 0 };
+
+  CHANNELS.forEach(ch => {
+    const csvPath = `${DATA_DIR}\\焕梦_${ch.name}_原始.csv`;
+    if (!fs.existsSync(csvPath)) return;
+    let raw = fs.readFileSync(csvPath, 'utf-8');
+    if (raw.charCodeAt(0) === 0xFEFF) raw = raw.slice(1);
+    const lines = raw.split('\n').filter(l => l.trim());
+    const header = lines[0].split(',');
+    const phoneIdx = header.findIndex(c => c.includes('手机号码'));
+    // 重用清洗逻辑
+    const idx = {
+      id:        header.findIndex(c => c.includes('账号ID') || c.includes('账户ID')),
+      birth:     header.findIndex(c => c.includes('出生年月')),
+      time:      header.findIndex(c => c.includes('所用时间')),
+      processor: header.findIndex(c => c.includes('手机处理器')),
+      ram:       header.findIndex(c => c.includes('运行内存')),
+      os:        header.findIndex(c => c.includes('PC设备的系统版本')),
+      trap:      header.findIndex(c => c.includes('18、')),
+      phone:     phoneIdx,
+      email:     header.findIndex(c => c.includes('邮箱')),
+    };
+    const rules = [
+      { check: r => { const s = parseSeconds(r[idx.time]); return s !== null && s < 60; } },
+      { check: r => { const s = parseSeconds(r[idx.time]); return s !== null && s > 6000; } },
+      { check: r => (r[idx.trap] || '').includes('射击类') },
+      { check: r => { const a = calcAge(r[idx.birth]); return a !== null && (a < 18 || a > 100); } },
+      { check: r => !isValidPhone(r[idx.phone]) },
+      { check: r => !isValidEmail(r[idx.email]) },
+      { check: r => idx.id >= 0 && !isValidId(r[idx.id]) },
+      { check: r => (r[idx.processor] || '').startsWith('不清楚具体配置') },
+      { check: r => (r[idx.ram] || '').trim() === '不清楚' },
+      { check: r => { const v = (r[idx.os] || '').trim(); return v === '其他 Windows 系统' || v === '其他操作系统（如 Linux、鸿蒙）'; } },
+    ];
+
+    for (let i = 1; i < lines.length; i++) {
+      const row = parseCSVLine(lines[i]);
+      if (row.length < 20) continue;
+      if (rules.some(r => r.check(row))) continue; // 跳过无效
+      const phone = (row[phoneIdx] || '').trim();
+      if (!phone) continue;
+      const existing = phoneMap.get(phone);
+      if (!existing || ch.priority < existing.priority) {
+        // 新号码，或当前渠道优先级更高
+        if (existing) chCounts[existing.channel]--;
+        phoneMap.set(phone, { channel: ch.key, phone });
+        chCounts[ch.key]++;
+      }
+    }
+  });
+
+  const beforeTotal = Object.values(results).reduce((s, d) => s + (d?.valid || 0), 0);
+  const afterTotal = phoneMap.size;
+  const duplicates = beforeTotal - afterTotal;
+
+  return {
+    beforeTotal,
+    afterTotal,
+    duplicates,
+    retained: chCounts,
+    dupRate: beforeTotal > 0 ? ((duplicates / beforeTotal) * 100).toFixed(1) : '0.0',
+  };
+}
+
 // ======================== 主流程 ========================
 console.log('═'.repeat(60));
 console.log('[1/3] 拉取三渠道数据...');
@@ -186,8 +255,16 @@ downloads.forEach(ch => {
   }
 });
 
-console.log('\n[3/3] 生成三合一数据大屏...');
-const html = generateCombinedHTML(results, REFRESH_MIN);
+console.log('\n[3/3] 执行跨渠道去重...');
+// 加载每个渠道有效答卷的手机号，去重
+const dedup = dedupAcrossChannels(results);
+console.log(`  去重前有效合计: ${dedup.beforeTotal.toLocaleString()}`);
+console.log(`  跨渠道重复: ${dedup.duplicates.toLocaleString()} 人`);
+console.log(`  去重后唯一用户: ${dedup.afterTotal.toLocaleString()}`);
+console.log(`  各渠道留存: TapTap ${dedup.retained.tap} / 好游 ${dedup.retained.haoyou} / 主站 ${dedup.retained.main}`);
+
+console.log('\n[4/4] 生成三合一数据大屏...');
+const html = generateCombinedHTML(results, dedup, REFRESH_MIN);
 fs.writeFileSync(OUTPUT_HTML, html, 'utf-8');
 console.log(`✅ 大屏已刷新: ${UPDATE_TIME}`);
 console.log(`   文件: ${OUTPUT_HTML}`);
@@ -199,7 +276,7 @@ if (!fs.existsSync(LOG_FILE)) fs.writeFileSync(LOG_FILE, logHeader + logEntry, '
 else fs.appendFileSync(LOG_FILE, logEntry, 'utf-8');
 
 // ======================== HTML 模板 ========================
-function generateCombinedHTML(data, intervalMin) {
+function generateCombinedHTML(data, dedup, intervalMin) {
   const chs = CHANNELS.map(ch => ({ ...ch, d: data[ch.key] }));
   const totalAll = chs.reduce((s, c) => s + (c.d?.total || 0), 0);
   const validAll = chs.reduce((s, c) => s + (c.d?.valid || 0), 0);
@@ -342,6 +419,24 @@ function generateCombinedHTML(data, intervalMin) {
       <div class="card orange"><div class="num">${rateAll}%</div><div class="label">总有效回收率</div></div>
     </div>
 
+    <div class="chart-row" style="margin-bottom:18px;">
+      <div class="chart-box full" style="background:#0f1923;border:1px solid #2a3a4a;">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+          <div>
+            <h3 style="font-size:14px;color:#fff;margin-bottom:4px;">🔗 跨渠道去重</h3>
+            <p style="font-size:11px;color:#8899aa;">去重规则：按手机号匹配，跨渠道重复时优先保留 <b style="color:#42a5f5;">TapTap</b> &gt; <b style="color:#ef5350;">好游快爆</b> &gt; <b style="color:#ffa726;">主站</b></p>
+          </div>
+          <div style="display:flex;gap:20px;text-align:center;">
+            <div><div style="font-size:24px;font-weight:bold;color:#4fc3f7;">${validAll.toLocaleString()}</div><div style="font-size:10px;color:#8899aa;">去重前有效</div></div>
+            <div style="color:#667788;font-size:20px;align-self:center;">−</div>
+            <div><div style="font-size:24px;font-weight:bold;color:#ef5350;">${dedup.duplicates.toLocaleString()}</div><div style="font-size:10px;color:#8899aa;">跨渠道重复</div></div>
+            <div style="color:#667788;font-size:20px;align-self:center;">=</div>
+            <div><div style="font-size:24px;font-weight:bold;color:#66bb6a;">${dedup.afterTotal.toLocaleString()}</div><div style="font-size:10px;color:#8899aa;">去重后唯一用户</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="overview-channels">
       ${chs.map(ch => {
         if (!ch.d) return '';
@@ -353,7 +448,7 @@ function generateCombinedHTML(data, intervalMin) {
             <div class="mc"><div class="n" style="color:#4fc3f7">${(ch.d.total||0).toLocaleString()}</div><div class="l">原始答卷</div></div>
             <div class="mc"><div class="n" style="color:#66bb6a">${(ch.d.valid||0).toLocaleString()}</div><div class="l">有效答卷</div></div>
             <div class="mc"><div class="n" style="color:#ef5350">${(ch.d.invalid||0).toLocaleString()}</div><div class="l">剔除无效</div></div>
-            <div class="mc"><div class="n" style="color:#ffa726">${ch.d.rate}%</div><div class="l">有效率</div></div>
+            <div class="mc"><div class="n" style="color:#ce93d8">${(dedup.retained[ch.key]||0).toLocaleString()}</div><div class="l">去重后留存</div></div>
           </div>
         </div>`;
       }).join('')}
