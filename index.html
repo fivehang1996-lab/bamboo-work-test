@@ -86,7 +86,7 @@
       <span class="live-badge"><span class="live-dot"></span><span class="live-text">LIVE</span></span>
     </div>
     <div class="update-info">
-      <div>最后更新 <span class="time">2026/6/4 16:54:28</span></div>
+      <div>最后更新 <span class="time">2026/6/4 17:01:37</span></div>
       <div class="countdown" id="countdown">下次刷新: 计算中...</div>
     </div>
   </div>
@@ -144,6 +144,9 @@
       <div class="chart-box"><h3>身份核验不符合要求 命中对比</h3><div id="ov-identity" style="height:280px;"></div></div>
       <div class="chart-box"><h3>设备甄别不符合要求 命中对比</h3><div id="ov-device" style="height:280px;"></div></div>
     </div>
+    <div class="chart-row">
+      <div class="chart-box full"><h3>参测设备平台分布（有效答卷）</h3><div id="ov-platform" style="height:320px;"></div></div>
+    </div>
   </div>
 
   <!-- ==================== 渠道详情面板 ==================== -->
@@ -188,9 +191,10 @@
       <div class="chart-box"><h3>有效 vs 无效</h3><div id="pie-tap" style="height:300px;"></div></div>
       <div class="chart-box"><h3>各规则命中数</h3><div id="bar-tap" style="height:300px;"></div></div>
     </div>
-    <div class="chart-row">
-      <div class="chart-box"><h3>三类规则命中占比</h3><div id="cat-tap" style="height:300px;"></div></div>
-      <div class="chart-box"><h3>数据流</h3><div id="sankey-tap" style="height:300px;"></div></div>
+    <div class="chart-row triple">
+      <div class="chart-box"><h3>参测设备平台</h3><div id="plat-tap" style="height:280px;"></div></div>
+      <div class="chart-box"><h3>三类规则命中占比</h3><div id="cat-tap" style="height:280px;"></div></div>
+      <div class="chart-box"><h3>数据流</h3><div id="sankey-tap" style="height:280px;"></div></div>
     </div>
   </div><div id="panel-main" class="hidden">
     <div class="cards">
@@ -233,9 +237,10 @@
       <div class="chart-box"><h3>有效 vs 无效</h3><div id="pie-main" style="height:300px;"></div></div>
       <div class="chart-box"><h3>各规则命中数</h3><div id="bar-main" style="height:300px;"></div></div>
     </div>
-    <div class="chart-row">
-      <div class="chart-box"><h3>三类规则命中占比</h3><div id="cat-main" style="height:300px;"></div></div>
-      <div class="chart-box"><h3>数据流</h3><div id="sankey-main" style="height:300px;"></div></div>
+    <div class="chart-row triple">
+      <div class="chart-box"><h3>参测设备平台</h3><div id="plat-main" style="height:280px;"></div></div>
+      <div class="chart-box"><h3>三类规则命中占比</h3><div id="cat-main" style="height:280px;"></div></div>
+      <div class="chart-box"><h3>数据流</h3><div id="sankey-main" style="height:280px;"></div></div>
     </div>
   </div><div id="panel-haoyou" class="hidden">
     <div class="cards">
@@ -278,15 +283,16 @@
       <div class="chart-box"><h3>有效 vs 无效</h3><div id="pie-haoyou" style="height:300px;"></div></div>
       <div class="chart-box"><h3>各规则命中数</h3><div id="bar-haoyou" style="height:300px;"></div></div>
     </div>
-    <div class="chart-row">
-      <div class="chart-box"><h3>三类规则命中占比</h3><div id="cat-haoyou" style="height:300px;"></div></div>
-      <div class="chart-box"><h3>数据流</h3><div id="sankey-haoyou" style="height:300px;"></div></div>
+    <div class="chart-row triple">
+      <div class="chart-box"><h3>参测设备平台</h3><div id="plat-haoyou" style="height:280px;"></div></div>
+      <div class="chart-box"><h3>三类规则命中占比</h3><div id="cat-haoyou" style="height:280px;"></div></div>
+      <div class="chart-box"><h3>数据流</h3><div id="sankey-haoyou" style="height:280px;"></div></div>
     </div>
   </div>
 </div>
 
 <script>
-var DATA = {"tap":{"total":11994,"valid":8719,"invalid":3275,"rate":"72.7","ruleHits":{"time_short":17,"time_long":23,"trap":1533,"age":634,"phone":0,"email":0,"id_err":105,"q9":1247,"q10":132,"q11":85},"catHits":{"quality":1567,"identity":719,"device":1378},"name":"TapTap","barRules":[{"name":"答题过快(<60s)","val":17,"color":"#4fc3f7"},{"name":"答题超时(>6000s)","val":23,"color":"#4fc3f7"},{"name":"陷阱题(射击类)","val":1533,"color":"#4fc3f7"},{"name":"年龄不符","val":634,"color":"#66bb6a"},{"name":"手机号错误","val":0,"color":"#66bb6a"},{"name":"邮箱错误","val":0,"color":"#66bb6a"},{"name":"ID错误","val":105,"color":"#66bb6a"},{"name":"Q9不清楚处理器","val":1247,"color":"#ffa726"},{"name":"Q10不清楚内存","val":132,"color":"#ffa726"},{"name":"Q11其他OS","val":85,"color":"#ffa726"}]},"main":{"total":932,"valid":779,"invalid":153,"rate":"83.6","ruleHits":{"time_short":1,"time_long":2,"trap":92,"age":24,"phone":0,"email":0,"id_err":0,"q9":42,"q10":6,"q11":3},"catHits":{"quality":94,"identity":24,"device":48},"name":"主站","barRules":[{"name":"答题过快(<60s)","val":1,"color":"#4fc3f7"},{"name":"答题超时(>6000s)","val":2,"color":"#4fc3f7"},{"name":"陷阱题(射击类)","val":92,"color":"#4fc3f7"},{"name":"年龄不符","val":24,"color":"#66bb6a"},{"name":"手机号错误","val":0,"color":"#66bb6a"},{"name":"邮箱错误","val":0,"color":"#66bb6a"},{"name":"ID错误","val":0,"color":"#66bb6a"},{"name":"Q9不清楚处理器","val":42,"color":"#ffa726"},{"name":"Q10不清楚内存","val":6,"color":"#ffa726"},{"name":"Q11其他OS","val":3,"color":"#ffa726"}]},"haoyou":{"total":2234,"valid":1561,"invalid":673,"rate":"69.9","ruleHits":{"time_short":9,"time_long":3,"trap":385,"age":152,"phone":0,"email":0,"id_err":1,"q9":187,"q10":23,"q11":16},"catHits":{"quality":395,"identity":153,"device":216},"name":"好游快爆","barRules":[{"name":"答题过快(<60s)","val":9,"color":"#4fc3f7"},{"name":"答题超时(>6000s)","val":3,"color":"#4fc3f7"},{"name":"陷阱题(射击类)","val":385,"color":"#4fc3f7"},{"name":"年龄不符","val":152,"color":"#66bb6a"},{"name":"手机号错误","val":0,"color":"#66bb6a"},{"name":"邮箱错误","val":0,"color":"#66bb6a"},{"name":"ID错误","val":1,"color":"#66bb6a"},{"name":"Q9不清楚处理器","val":187,"color":"#ffa726"},{"name":"Q10不清楚内存","val":23,"color":"#ffa726"},{"name":"Q11其他OS","val":16,"color":"#ffa726"}]}};
+var DATA = {"tap":{"total":11994,"valid":8719,"invalid":3275,"rate":"72.7","ruleHits":{"time_short":17,"time_long":23,"trap":1533,"age":634,"phone":0,"email":0,"id_err":105,"q9":1247,"q10":132,"q11":85},"catHits":{"quality":1567,"identity":719,"device":1378},"platform":{"pc":4779,"android":7381,"ios":0},"name":"TapTap","barRules":[{"name":"答题过快(<60s)","val":17,"color":"#4fc3f7"},{"name":"答题超时(>6000s)","val":23,"color":"#4fc3f7"},{"name":"陷阱题(射击类)","val":1533,"color":"#4fc3f7"},{"name":"年龄不符","val":634,"color":"#66bb6a"},{"name":"手机号错误","val":0,"color":"#66bb6a"},{"name":"邮箱错误","val":0,"color":"#66bb6a"},{"name":"ID错误","val":105,"color":"#66bb6a"},{"name":"Q9不清楚处理器","val":1247,"color":"#ffa726"},{"name":"Q10不清楚内存","val":132,"color":"#ffa726"},{"name":"Q11其他OS","val":85,"color":"#ffa726"}]},"main":{"total":932,"valid":779,"invalid":153,"rate":"83.6","ruleHits":{"time_short":1,"time_long":2,"trap":92,"age":24,"phone":0,"email":0,"id_err":0,"q9":42,"q10":6,"q11":3},"catHits":{"quality":94,"identity":24,"device":48},"platform":{"pc":654,"android":561,"ios":114},"name":"主站","barRules":[{"name":"答题过快(<60s)","val":1,"color":"#4fc3f7"},{"name":"答题超时(>6000s)","val":2,"color":"#4fc3f7"},{"name":"陷阱题(射击类)","val":92,"color":"#4fc3f7"},{"name":"年龄不符","val":24,"color":"#66bb6a"},{"name":"手机号错误","val":0,"color":"#66bb6a"},{"name":"邮箱错误","val":0,"color":"#66bb6a"},{"name":"ID错误","val":0,"color":"#66bb6a"},{"name":"Q9不清楚处理器","val":42,"color":"#ffa726"},{"name":"Q10不清楚内存","val":6,"color":"#ffa726"},{"name":"Q11其他OS","val":3,"color":"#ffa726"}]},"haoyou":{"total":2234,"valid":1561,"invalid":673,"rate":"69.9","ruleHits":{"time_short":9,"time_long":3,"trap":385,"age":152,"phone":0,"email":0,"id_err":1,"q9":187,"q10":23,"q11":16},"catHits":{"quality":395,"identity":153,"device":216},"platform":{"pc":684,"android":1404,"ios":0},"name":"好游快爆","barRules":[{"name":"答题过快(<60s)","val":9,"color":"#4fc3f7"},{"name":"答题超时(>6000s)","val":3,"color":"#4fc3f7"},{"name":"陷阱题(射击类)","val":385,"color":"#4fc3f7"},{"name":"年龄不符","val":152,"color":"#66bb6a"},{"name":"手机号错误","val":0,"color":"#66bb6a"},{"name":"邮箱错误","val":0,"color":"#66bb6a"},{"name":"ID错误","val":1,"color":"#66bb6a"},{"name":"Q9不清楚处理器","val":187,"color":"#ffa726"},{"name":"Q10不清楚内存","val":23,"color":"#ffa726"},{"name":"Q11其他OS","val":16,"color":"#ffa726"}]}};
 var CHS = [{"key":"tap","name":"TapTap"},{"key":"main","name":"主站"},{"key":"haoyou","name":"好游快爆"}];
 var green='#66bb6a', red='#ef5350', blue='#4fc3f7', orange='#ffa726';
 var catQuality='#4fc3f7', catIdentity='#66bb6a', catDevice='#ffa726';
@@ -351,6 +357,27 @@ function switchTab(key) {
   catBar('ov-quality','quality');
   catBar('ov-identity','identity');
   catBar('ov-device','device');
+
+  // Platform comparison
+  var plat = echarts.init(document.getElementById('ov-platform'));
+  plat.setOption({
+    tooltip:{trigger:'axis',axisPointer:{type:'shadow'}},
+    legend:{data:['PC','安卓','iOS'],bottom:0,textStyle:{color:'#8899aa',fontSize:11}},
+    grid:{left:2,right:8,bottom:28,top:8,containLabel:true},
+    xAxis:{type:'category',data:chNames,axisLabel:{color:'#ccc',fontSize:11}},
+    yAxis:{type:'value',axisLabel:{color:'#8899aa',fontSize:10},splitLine:{lineStyle:{color:'#1e3040'}}},
+    series:[
+      {name:'PC',type:'bar',barWidth:28,itemStyle:{color:'#5c6bc0'},
+       data:CHS.map(function(ch){return DATA[ch.key]?DATA[ch.key].platform.pc:0;}),
+       label:{show:true,position:'top',color:'#ccc',fontSize:9}},
+      {name:'安卓',type:'bar',barWidth:28,itemStyle:{color:'#66bb6a'},
+       data:CHS.map(function(ch){return DATA[ch.key]?DATA[ch.key].platform.android:0;}),
+       label:{show:true,position:'top',color:'#ccc',fontSize:9}},
+      {name:'iOS',type:'bar',barWidth:28,itemStyle:{color:'#ef5350'},
+       data:CHS.map(function(ch){return DATA[ch.key]?DATA[ch.key].platform.ios:0;}),
+       label:{show:true,position:'top',color:'#ccc',fontSize:9}}
+    ]
+  });
 })();
 
 // ====== Render channel charts ======
@@ -376,6 +403,17 @@ function renderChannel(key) {
     xAxis:{type:'value',axisLabel:{color:'#8899aa',fontSize:9},splitLine:{lineStyle:{color:'#1e3040'}}},
     yAxis:{type:'category',data:d.barRules.map(function(r){return r.name;}).reverse(),axisLabel:{color:'#ccc',fontSize:9},axisLine:{show:false},axisTick:{show:false},inverse:true},
     series:[{type:'bar',data:d.barRules.map(function(r){return {value:r.val,itemStyle:{color:r.color}};}).reverse(),barWidth:14,label:{show:true,position:'right',color:'#ccc',fontSize:9,formatter:function(p){return p.value>0?p.value:'';}},itemStyle:{borderRadius:[0,3,3,0]}}]
+  });
+
+  // Platform pie
+  var platChart = echarts.init(document.getElementById('plat-'+key));
+  platChart.setOption({
+    tooltip:{trigger:'item',formatter:'{b}: {c} 人 ({d}%)'},
+    series:[{type:'pie',radius:['45%','72%'],center:['50%','50%'],itemStyle:{borderRadius:4,borderColor:'#0f1923',borderWidth:2},label:{color:'#ccc',fontSize:10,formatter:'{b}\n{d}%'},data:[
+      {value:d.platform.pc,name:'PC',itemStyle:{color:'#5c6bc0'}},
+      {value:d.platform.android,name:'安卓',itemStyle:{color:'#66bb6a'}},
+      {value:d.platform.ios,name:'iOS',itemStyle:{color:'#ef5350'}},
+    ].filter(function(x){return x.value>0;})}]
   });
 
   // Category donut
@@ -451,11 +489,11 @@ function renderChannel(key) {
 
 // ====== Responsive ======
 window.addEventListener('resize',function(){
-  ['ov-compare','ov-quality','ov-identity','ov-device'].forEach(function(id){
+  ['ov-compare','ov-quality','ov-identity','ov-device','ov-platform'].forEach(function(id){
     var el=document.getElementById(id); if(el && el.clientWidth>0) echarts.getInstanceByDom(el)?.resize();
   });
   CHS.forEach(function(ch){
-    ['pie-','bar-','cat-','sankey-'].forEach(function(pre){
+    ['pie-','bar-','plat-','cat-','sankey-'].forEach(function(pre){
       var el=document.getElementById(pre+ch.key); if(el && el.clientWidth>0) echarts.getInstanceByDom(el)?.resize();
     });
   });

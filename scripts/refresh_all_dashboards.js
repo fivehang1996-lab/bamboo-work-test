@@ -124,6 +124,7 @@ function cleanSurvey(csvPath, label) {
     trap:      header.findIndex(c => c.includes('18、')),
     phone:     header.findIndex(c => c.includes('手机号码')),
     email:     header.findIndex(c => c.includes('邮箱')),
+    platform:  header.findIndex(c => c.includes('设备平台')),
   };
 
   const rules = [
@@ -142,14 +143,21 @@ function cleanSurvey(csvPath, label) {
   let total = 0, validCount = 0;
   const ruleHits = {}; rules.forEach(r => { ruleHits[r.key] = 0; });
   const catHits = { quality: 0, identity: 0, device: 0 };
+  const platform = { pc: 0, android: 0, ios: 0 };
 
   for (let i = 1; i < lines.length; i++) {
     const row = parseCSVLine(lines[i]);
     if (row.length < 20) continue;
     total++;
     const failed = rules.filter(r => r.check(row)).map(r => r.key);
-    if (failed.length === 0) { validCount++; }
-    else {
+    if (failed.length === 0) {
+      validCount++;
+      // 统计有效答卷的平台分布
+      const plat = (row[idx.platform] || '').replace(/\*.*?\*/g, ''); // 去掉iOS长注释
+      if (plat.includes('PC')) platform.pc++;
+      if (plat.includes('安卓')) platform.android++;
+      if (plat.includes('iOS')) platform.ios++;
+    } else {
       const cats = new Set();
       failed.forEach(k => { ruleHits[k]++; const rl = rules.find(r => r.key === k); if (rl) cats.add(rl.cat); });
       cats.forEach(c => { catHits[c]++; });
@@ -159,7 +167,7 @@ function cleanSurvey(csvPath, label) {
   return {
     total, valid: validCount, invalid: total - validCount,
     rate: total > 0 ? ((validCount / total) * 100).toFixed(1) : '0.0',
-    ruleHits, catHits, updateTime: UPDATE_TIME,
+    ruleHits, catHits, platform, updateTime: UPDATE_TIME,
   };
 }
 
@@ -207,7 +215,7 @@ function generateCombinedHTML(data, intervalMin) {
     if (!ch.d) return;
     chartsData[ch.key] = {
       total: ch.d.total, valid: ch.d.valid, invalid: ch.d.invalid, rate: ch.d.rate,
-      ruleHits: ch.d.ruleHits, catHits: ch.d.catHits,
+      ruleHits: ch.d.ruleHits, catHits: ch.d.catHits, platform: ch.d.platform,
       name: ch.name,
       barRules: [
         { name:'答题过快(<60s)',   val:ch.d.ruleHits.time_short, color:catColors.quality },
@@ -359,6 +367,9 @@ function generateCombinedHTML(data, intervalMin) {
       <div class="chart-box"><h3>身份核验不符合要求 命中对比</h3><div id="ov-identity" style="height:280px;"></div></div>
       <div class="chart-box"><h3>设备甄别不符合要求 命中对比</h3><div id="ov-device" style="height:280px;"></div></div>
     </div>
+    <div class="chart-row">
+      <div class="chart-box full"><h3>参测设备平台分布（有效答卷）</h3><div id="ov-platform" style="height:320px;"></div></div>
+    </div>
   </div>
 
   <!-- ==================== 渠道详情面板 ==================== -->
@@ -407,9 +418,10 @@ function generateCombinedHTML(data, intervalMin) {
       <div class="chart-box"><h3>有效 vs 无效</h3><div id="pie-${ch.key}" style="height:300px;"></div></div>
       <div class="chart-box"><h3>各规则命中数</h3><div id="bar-${ch.key}" style="height:300px;"></div></div>
     </div>
-    <div class="chart-row">
-      <div class="chart-box"><h3>三类规则命中占比</h3><div id="cat-${ch.key}" style="height:300px;"></div></div>
-      <div class="chart-box"><h3>数据流</h3><div id="sankey-${ch.key}" style="height:300px;"></div></div>
+    <div class="chart-row triple">
+      <div class="chart-box"><h3>参测设备平台</h3><div id="plat-${ch.key}" style="height:280px;"></div></div>
+      <div class="chart-box"><h3>三类规则命中占比</h3><div id="cat-${ch.key}" style="height:280px;"></div></div>
+      <div class="chart-box"><h3>数据流</h3><div id="sankey-${ch.key}" style="height:280px;"></div></div>
     </div>
   </div>`;
   }).join('')}
@@ -481,6 +493,27 @@ function switchTab(key) {
   catBar('ov-quality','quality');
   catBar('ov-identity','identity');
   catBar('ov-device','device');
+
+  // Platform comparison
+  var plat = echarts.init(document.getElementById('ov-platform'));
+  plat.setOption({
+    tooltip:{trigger:'axis',axisPointer:{type:'shadow'}},
+    legend:{data:['PC','安卓','iOS'],bottom:0,textStyle:{color:'#8899aa',fontSize:11}},
+    grid:{left:2,right:8,bottom:28,top:8,containLabel:true},
+    xAxis:{type:'category',data:chNames,axisLabel:{color:'#ccc',fontSize:11}},
+    yAxis:{type:'value',axisLabel:{color:'#8899aa',fontSize:10},splitLine:{lineStyle:{color:'#1e3040'}}},
+    series:[
+      {name:'PC',type:'bar',barWidth:28,itemStyle:{color:'#5c6bc0'},
+       data:CHS.map(function(ch){return DATA[ch.key]?DATA[ch.key].platform.pc:0;}),
+       label:{show:true,position:'top',color:'#ccc',fontSize:9}},
+      {name:'安卓',type:'bar',barWidth:28,itemStyle:{color:'#66bb6a'},
+       data:CHS.map(function(ch){return DATA[ch.key]?DATA[ch.key].platform.android:0;}),
+       label:{show:true,position:'top',color:'#ccc',fontSize:9}},
+      {name:'iOS',type:'bar',barWidth:28,itemStyle:{color:'#ef5350'},
+       data:CHS.map(function(ch){return DATA[ch.key]?DATA[ch.key].platform.ios:0;}),
+       label:{show:true,position:'top',color:'#ccc',fontSize:9}}
+    ]
+  });
 })();
 
 // ====== Render channel charts ======
@@ -506,6 +539,17 @@ function renderChannel(key) {
     xAxis:{type:'value',axisLabel:{color:'#8899aa',fontSize:9},splitLine:{lineStyle:{color:'#1e3040'}}},
     yAxis:{type:'category',data:d.barRules.map(function(r){return r.name;}).reverse(),axisLabel:{color:'#ccc',fontSize:9},axisLine:{show:false},axisTick:{show:false},inverse:true},
     series:[{type:'bar',data:d.barRules.map(function(r){return {value:r.val,itemStyle:{color:r.color}};}).reverse(),barWidth:14,label:{show:true,position:'right',color:'#ccc',fontSize:9,formatter:function(p){return p.value>0?p.value:'';}},itemStyle:{borderRadius:[0,3,3,0]}}]
+  });
+
+  // Platform pie
+  var platChart = echarts.init(document.getElementById('plat-'+key));
+  platChart.setOption({
+    tooltip:{trigger:'item',formatter:'{b}: {c} 人 ({d}%)'},
+    series:[{type:'pie',radius:['45%','72%'],center:['50%','50%'],itemStyle:{borderRadius:4,borderColor:'#0f1923',borderWidth:2},label:{color:'#ccc',fontSize:10,formatter:'{b}\\n{d}%'},data:[
+      {value:d.platform.pc,name:'PC',itemStyle:{color:'#5c6bc0'}},
+      {value:d.platform.android,name:'安卓',itemStyle:{color:'#66bb6a'}},
+      {value:d.platform.ios,name:'iOS',itemStyle:{color:'#ef5350'}},
+    ].filter(function(x){return x.value>0;})}]
   });
 
   // Category donut
@@ -581,11 +625,11 @@ function renderChannel(key) {
 
 // ====== Responsive ======
 window.addEventListener('resize',function(){
-  ['ov-compare','ov-quality','ov-identity','ov-device'].forEach(function(id){
+  ['ov-compare','ov-quality','ov-identity','ov-device','ov-platform'].forEach(function(id){
     var el=document.getElementById(id); if(el && el.clientWidth>0) echarts.getInstanceByDom(el)?.resize();
   });
   CHS.forEach(function(ch){
-    ['pie-','bar-','cat-','sankey-'].forEach(function(pre){
+    ['pie-','bar-','plat-','cat-','sankey-'].forEach(function(pre){
       var el=document.getElementById(pre+ch.key); if(el && el.clientWidth>0) echarts.getInstanceByDom(el)?.resize();
     });
   });
