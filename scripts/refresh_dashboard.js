@@ -165,6 +165,8 @@ const embeddedData = {
 
 const html = generateHTML(embeddedData, refreshIntervalMin);
 fs.writeFileSync(DASHBOARD_HTML, html, 'utf-8');
+// 同步更新根目录 index.html（Netlify 部署用）
+fs.writeFileSync('D:\\claude\\index.html', html, 'utf-8');
 
 // ======================== 第 4 步：写日志 ========================
 console.log('[4/4] 写入刷新日志...');
