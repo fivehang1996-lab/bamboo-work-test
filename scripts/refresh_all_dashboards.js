@@ -449,12 +449,12 @@ function switchTab(key) {
     xAxis:{type:'category',data:chNames,axisLabel:{color:'#ccc',fontSize:11}},
     yAxis:{type:'value',axisLabel:{color:'#8899aa',fontSize:10},splitLine:{lineStyle:{color:'#1e3040'}}},
     series:[
-      {name:'有效',type:'bar',barWidth:44,
-       data:CHS.map(function(ch){var d=DATA[ch.key];return {value:d?d.valid:0,itemStyle:{color:green}};}),
-       itemStyle:{borderRadius:[3,3,0,0]},label:{show:true,position:'top',color:'#ccc',fontSize:10,formatter:function(p){return p.value.toLocaleString();}}},
-      {name:'无效',type:'bar',barWidth:44,
-       data:CHS.map(function(ch){var d=DATA[ch.key];return {value:d?d.invalid:0,itemStyle:{color:red}};}),
-       itemStyle:{borderRadius:[0,0,3,3]},label:{show:true,position:'top',color:'#ccc',fontSize:10,formatter:function(p){return p.value.toLocaleString();}}}
+      {name:'有效',type:'bar',barWidth:44,itemStyle:{color:green,borderRadius:[3,3,0,0]},
+       data:CHS.map(function(ch){var d=DATA[ch.key];return d?d.valid:0;}),
+       label:{show:true,position:'top',color:'#ccc',fontSize:10,formatter:function(p){return p.value.toLocaleString();}}},
+      {name:'无效',type:'bar',barWidth:44,itemStyle:{color:red,borderRadius:[3,3,0,0]},
+       data:CHS.map(function(ch){var d=DATA[ch.key];return d?d.invalid:0;}),
+       label:{show:true,position:'top',color:'#ccc',fontSize:10,formatter:function(p){return p.value.toLocaleString();}}}
     ]
   });
 
