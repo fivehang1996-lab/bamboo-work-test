@@ -248,6 +248,7 @@ function dedupAcrossChannels(results) {
       processor: header.findIndex(c => c.includes('手机处理器')),
       ram:       header.findIndex(c => c.includes('运行内存')),
       os:        header.findIndex(c => c.includes('PC设备的系统版本')),
+      gpu:       header.findIndex(c => c.includes('显卡')),
       trap:      header.findIndex(c => c.includes('18、')),
       phone:     phoneIdx,
       email:     header.findIndex(c => c.includes('邮箱')),
@@ -275,7 +276,11 @@ function dedupAcrossChannels(results) {
       if (!existing || ch.priority < existing.priority) {
         // 新号码，或当前渠道优先级更高
         if (existing) chCounts[existing.channel]--;
-        phoneMap.set(phone, { channel: ch.key, phone });
+        phoneMap.set(phone, { channel: ch.key, phone,
+          proc: (row[idx.processor] || '').trim(),
+          ram:  (row[idx.ram] || '').trim(),
+          gpu:  (row[idx.gpu] || '').trim(),
+        });
         chCounts[ch.key]++;
       }
     }
@@ -285,12 +290,52 @@ function dedupAcrossChannels(results) {
   const afterTotal = phoneMap.size;
   const duplicates = beforeTotal - afterTotal;
 
+  // 去重后设备分层统计（复用 cleanSurvey 的分类逻辑）
+  const dedupDevice = {
+    proc: { elite:0, gen3:0, gen1_2:0, low:0, unknown:0, skip:0 },
+    ram:  { g16:0, g12:0, g8:0, g6:0, g4:0, unknown:0, skip:0 },
+    gpu:  { rtx50:0, rtx40:0, rtx30:0, rtxOther:0, amd:0, integrated:0, unknown:0, skip:0 },
+  };
+  for (const [, entry] of phoneMap) {
+    // 处理器分层
+    const p = entry.proc;
+    if (p === '(跳过)') dedupDevice.proc.skip++;
+    else if (p.startsWith('不清楚')) dedupDevice.proc.unknown++;
+    else if (p.includes('Elite') || p.includes('9400')) dedupDevice.proc.elite++;
+    else if (p.includes('Gen3') || p.includes('9300')) dedupDevice.proc.gen3++;
+    else if (p.includes('Gen1') || p.includes('Gen2') || p.includes('9200') || p.includes('870') || p.includes('888')) dedupDevice.proc.gen1_2++;
+    else dedupDevice.proc.low++;
+
+    // 内存分层
+    const r = entry.ram;
+    if (r === '(跳过)') dedupDevice.ram.skip++;
+    else if (r === '不清楚') dedupDevice.ram.unknown++;
+    else if (r.includes('16')) dedupDevice.ram.g16++;
+    else if (r.includes('12')) dedupDevice.ram.g12++;
+    else if (r.includes('8')) dedupDevice.ram.g8++;
+    else if (r.includes('6')) dedupDevice.ram.g6++;
+    else dedupDevice.ram.g4++;
+
+    // 显卡分层
+    const g = entry.gpu;
+    if (g === '(跳过)') dedupDevice.gpu.skip++;
+    else if (g.startsWith('不清楚')) dedupDevice.gpu.unknown++;
+    else if (g.includes('RTX50')) dedupDevice.gpu.rtx50++;
+    else if (g.includes('RTX40')) dedupDevice.gpu.rtx40++;
+    else if (g.includes('RTX30')) dedupDevice.gpu.rtx30++;
+    else if (g.includes('RTX')) dedupDevice.gpu.rtxOther++;
+    else if (g.includes('AMD')) dedupDevice.gpu.amd++;
+    else if (g.includes('集成')) dedupDevice.gpu.integrated++;
+    else dedupDevice.gpu.unknown++;
+  }
+
   return {
     beforeTotal,
     afterTotal,
     duplicates,
     retained: chCounts,
     dupRate: beforeTotal > 0 ? ((duplicates / beforeTotal) * 100).toFixed(1) : '0.0',
+    dedupDevice,
   };
 }
 
@@ -488,6 +533,25 @@ function generateCombinedHTML(data, dedup, intervalMin) {
             <div><div style="font-size:24px;font-weight:bold;color:#66bb6a;">${dedup.afterTotal.toLocaleString()}</div><div style="font-size:10px;color:#8899aa;">去重后唯一用户</div></div>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- 去重后高端设备筛选 KPI -->
+    <div class="cards" style="margin-bottom:18px;">
+      <div class="card" style="border:1px solid #ce93d8;">
+        <div class="num" style="color:#ce93d8;">${(dedup.dedupDevice.proc.elite + dedup.dedupDevice.proc.gen3).toLocaleString()}</div>
+        <div class="label">📱 旗舰+高端处理器</div>
+        <div style="font-size:11px;color:#ce93d8;margin-top:2px;">占去重后 ${dedup.afterTotal > 0 ? ((dedup.dedupDevice.proc.elite + dedup.dedupDevice.proc.gen3) / dedup.afterTotal * 100).toFixed(1) : '0.0'}%</div>
+      </div>
+      <div class="card" style="border:1px solid #ce93d8;">
+        <div class="num" style="color:#ce93d8;">${(dedup.dedupDevice.gpu.rtx50 + dedup.dedupDevice.gpu.rtx40).toLocaleString()}</div>
+        <div class="label">🖥️ 高端显卡 (RTX 40/50)</div>
+        <div style="font-size:11px;color:#ce93d8;margin-top:2px;">占去重后 ${dedup.afterTotal > 0 ? ((dedup.dedupDevice.gpu.rtx50 + dedup.dedupDevice.gpu.rtx40) / dedup.afterTotal * 100).toFixed(1) : '0.0'}%</div>
+      </div>
+      <div class="card" style="border:1px solid #ce93d8;">
+        <div class="num" style="color:#ce93d8;">${(dedup.dedupDevice.ram.g16 + dedup.dedupDevice.ram.g12).toLocaleString()}</div>
+        <div class="label">💾 大内存 (12GB+)</div>
+        <div style="font-size:11px;color:#ce93d8;margin-top:2px;">占去重后 ${dedup.afterTotal > 0 ? ((dedup.dedupDevice.ram.g16 + dedup.dedupDevice.ram.g12) / dedup.afterTotal * 100).toFixed(1) : '0.0'}%</div>
       </div>
     </div>
 
