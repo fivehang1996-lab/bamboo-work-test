@@ -121,6 +121,8 @@ function cleanSurvey(csvPath, label) {
     processor: header.findIndex(c => c.includes('手机处理器')),
     ram:       header.findIndex(c => c.includes('运行内存')),
     os:        header.findIndex(c => c.includes('PC设备的系统版本')),
+    gpu:       header.findIndex(c => c.includes('显卡')),
+    cpu:       header.findIndex(c => c.includes('CPU') || c.includes('处理器（CPU）')),
     trap:      header.findIndex(c => c.includes('18、')),
     phone:     header.findIndex(c => c.includes('手机号码')),
     email:     header.findIndex(c => c.includes('邮箱')),
@@ -144,6 +146,17 @@ function cleanSurvey(csvPath, label) {
   const ruleHits = {}; rules.forEach(r => { ruleHits[r.key] = 0; });
   const catHits = { quality: 0, identity: 0, device: 0 };
   const platform = { pc: 0, android: 0, ios: 0 };
+  // 设备分层统计
+  const device = {
+    // 处理器分层（手机用户）
+    proc: { elite:0, gen3:0, gen1_2:0, low:0, unknown:0, skip:0 },
+    // RAM 分层
+    ram: { g16:0, g12:0, g8:0, g6:0, g4:0, unknown:0, skip:0 },
+    // GPU 分层（PC用户）
+    gpu: { rtx50:0, rtx40:0, rtx30:0, rtxOther:0, amd:0, integrated:0, unknown:0, skip:0 },
+    // CPU 分层（PC用户）
+    cpu: { i9u9:0, i7u7:0, i5u5:0, i3:0, r9:0, r7:0, r5:0, unknown:0, skip:0 },
+  };
 
   for (let i = 1; i < lines.length; i++) {
     const row = parseCSVLine(lines[i]);
@@ -153,10 +166,51 @@ function cleanSurvey(csvPath, label) {
     if (failed.length === 0) {
       validCount++;
       // 统计有效答卷的平台分布
-      const plat = (row[idx.platform] || '').replace(/\*.*?\*/g, ''); // 去掉iOS长注释
+      const plat = (row[idx.platform] || '').replace(/\*.*?\*/g, '');
       if (plat.includes('PC')) platform.pc++;
       if (plat.includes('安卓')) platform.android++;
       if (plat.includes('iOS')) platform.ios++;
+
+      // 设备分层统计
+      const proc = (row[idx.processor] || '').trim();
+      if (proc === '(跳过)') device.proc.skip++;
+      else if (proc.startsWith('不清楚')) device.proc.unknown++;
+      else if (proc.includes('Elite') || proc.includes('9400')) device.proc.elite++;
+      else if (proc.includes('Gen3') || proc.includes('9300')) device.proc.gen3++;
+      else if (proc.includes('Gen1') || proc.includes('Gen2') || proc.includes('9200') || proc.includes('870') || proc.includes('888')) device.proc.gen1_2++;
+      else device.proc.low++;
+
+      const ramVal = (row[idx.ram] || '').trim();
+      if (ramVal === '(跳过)') device.ram.skip++;
+      else if (ramVal === '不清楚') device.ram.unknown++;
+      else if (ramVal.includes('16')) device.ram.g16++;
+      else if (ramVal.includes('12')) device.ram.g12++;
+      else if (ramVal.includes('8')) device.ram.g8++;
+      else if (ramVal.includes('6')) device.ram.g6++;
+      else device.ram.g4++;
+
+      const gpuVal = (row[idx.gpu] || '').trim();
+      if (gpuVal === '(跳过)') device.gpu.skip++;
+      else if (gpuVal.includes('不清楚')) device.gpu.unknown++;
+      else if (gpuVal.includes('RTX50')) device.gpu.rtx50++;
+      else if (gpuVal.includes('RTX40')) device.gpu.rtx40++;
+      else if (gpuVal.includes('RTX30')) device.gpu.rtx30++;
+      else if (gpuVal.includes('RTX')) device.gpu.rtxOther++;
+      else if (gpuVal.includes('AMD')) device.gpu.amd++;
+      else if (gpuVal.includes('集成')) device.gpu.integrated++;
+      else device.gpu.unknown++;
+
+      const cpuVal = (row[idx.cpu] || '').trim();
+      if (cpuVal === '(跳过)') device.cpu.skip++;
+      else if (cpuVal.includes('不清楚')) device.cpu.unknown++;
+      else if (cpuVal.includes('i9') || cpuVal.includes('Ultra 9')) device.cpu.i9u9++;
+      else if (cpuVal.includes('i7') || cpuVal.includes('Ultra 7')) device.cpu.i7u7++;
+      else if (cpuVal.includes('i5') || cpuVal.includes('Ultra 5')) device.cpu.i5u5++;
+      else if (cpuVal.includes('i3')) device.cpu.i3++;
+      else if (cpuVal.includes('Ryzen 9')) device.cpu.r9++;
+      else if (cpuVal.includes('Ryzen 7')) device.cpu.r7++;
+      else if (cpuVal.includes('Ryzen 5')) device.cpu.r5++;
+      else device.cpu.skip++;
     } else {
       const cats = new Set();
       failed.forEach(k => { ruleHits[k]++; const rl = rules.find(r => r.key === k); if (rl) cats.add(rl.cat); });
@@ -167,7 +221,7 @@ function cleanSurvey(csvPath, label) {
   return {
     total, valid: validCount, invalid: total - validCount,
     rate: total > 0 ? ((validCount / total) * 100).toFixed(1) : '0.0',
-    ruleHits, catHits, platform, updateTime: UPDATE_TIME,
+    ruleHits, catHits, platform, device, updateTime: UPDATE_TIME,
   };
 }
 
@@ -292,7 +346,7 @@ function generateCombinedHTML(data, dedup, intervalMin) {
     if (!ch.d) return;
     chartsData[ch.key] = {
       total: ch.d.total, valid: ch.d.valid, invalid: ch.d.invalid, rate: ch.d.rate,
-      ruleHits: ch.d.ruleHits, catHits: ch.d.catHits, platform: ch.d.platform,
+      ruleHits: ch.d.ruleHits, catHits: ch.d.catHits, platform: ch.d.platform, device: ch.d.device,
       name: ch.name,
       barRules: [
         { name:'答题过快(<60s)',   val:ch.d.ruleHits.time_short, color:catColors.quality },
@@ -465,6 +519,11 @@ function generateCombinedHTML(data, dedup, intervalMin) {
     <div class="chart-row">
       <div class="chart-box full"><h3>参测设备平台分布（有效答卷）</h3><div id="ov-platform" style="height:320px;"></div></div>
     </div>
+    <div class="chart-row triple">
+      <div class="chart-box"><h3>手机处理器 旗舰/高端占比</h3><div id="ov-proc" style="height:300px;"></div></div>
+      <div class="chart-box"><h3>PC显卡 RTX40/50占比</h3><div id="ov-gpu" style="height:300px;"></div></div>
+      <div class="chart-box"><h3>运行内存 12G+占比</h3><div id="ov-ram" style="height:300px;"></div></div>
+    </div>
   </div>
 
   <!-- ==================== 渠道详情面板 ==================== -->
@@ -517,6 +576,13 @@ function generateCombinedHTML(data, dedup, intervalMin) {
       <div class="chart-box"><h3>参测设备平台</h3><div id="plat-${ch.key}" style="height:280px;"></div></div>
       <div class="chart-box"><h3>三类规则命中占比</h3><div id="cat-${ch.key}" style="height:280px;"></div></div>
       <div class="chart-box"><h3>数据流</h3><div id="sankey-${ch.key}" style="height:280px;"></div></div>
+    </div>
+    <div class="chart-row">
+      <div class="chart-box full"><h3>📱 手机处理器分布（高端→低端）</h3><div id="proc-${ch.key}" style="height:260px;"></div></div>
+    </div>
+    <div class="chart-row">
+      <div class="chart-box"><h3>💾 手机运行内存</h3><div id="ram-${ch.key}" style="height:260px;"></div></div>
+      <div class="chart-box"><h3>🖥️ PC 显卡分布</h3><div id="gpu-${ch.key}" style="height:260px;"></div></div>
     </div>
   </div>`;
   }).join('')}
@@ -589,6 +655,24 @@ function switchTab(key) {
   catBar('ov-identity','identity');
   catBar('ov-device','device');
 
+  // Device overview
+  function devOverview(id, metric, labels, colors){
+    var c = echarts.init(document.getElementById(id));
+    c.setOption({
+      tooltip:{trigger:'axis',axisPointer:{type:'shadow'}},
+      legend:{data:labels,bottom:0,textStyle:{color:'#8899aa',fontSize:10}},
+      grid:{left:2,right:8,bottom:30,top:8,containLabel:true},
+      xAxis:{type:'category',data:chNames,axisLabel:{color:'#ccc',fontSize:10}},
+      yAxis:{type:'value',axisLabel:{color:'#8899aa',fontSize:9},splitLine:{lineStyle:{color:'#1e3040'}}},
+      series:labels.map(function(l,i){return {name:l,type:'bar',barWidth:24,itemStyle:{color:colors[i]},
+        data:CHS.map(function(ch){return DATA[ch.key]?DATA[ch.key].device[metric[0]][metric[i+1]]:0;}),
+        label:{show:true,position:'top',color:'#ccc',fontSize:8}};})
+    });
+  }
+  devOverview('ov-proc', ['proc','elite','gen3'], ['旗舰(8Elite/9400+)','高端(8Gen3/9300)'], ['#00e676','#66bb6a']);
+  devOverview('ov-gpu', ['gpu','rtx50','rtx40'], ['RTX 50系列','RTX 40系列'], ['#00e676','#66bb6a']);
+  devOverview('ov-ram', ['ram','g16','g12'], ['16GB及以上','12GB'], ['#00e676','#66bb6a']);
+
   // Platform comparison
   var plat = echarts.init(document.getElementById('ov-platform'));
   plat.setOption({
@@ -634,6 +718,54 @@ function renderChannel(key) {
     xAxis:{type:'value',axisLabel:{color:'#8899aa',fontSize:9},splitLine:{lineStyle:{color:'#1e3040'}}},
     yAxis:{type:'category',data:d.barRules.map(function(r){return r.name;}).reverse(),axisLabel:{color:'#ccc',fontSize:9},axisLine:{show:false},axisTick:{show:false},inverse:true},
     series:[{type:'bar',data:d.barRules.map(function(r){return {value:r.val,itemStyle:{color:r.color}};}).reverse(),barWidth:14,label:{show:true,position:'right',color:'#ccc',fontSize:9,formatter:function(p){return p.value>0?p.value:'';}},itemStyle:{borderRadius:[0,3,3,0]}}]
+  });
+
+  // Device detail charts
+  var dev = d.device;
+
+  // Processor bar
+  var procChart = echarts.init(document.getElementById('proc-'+key));
+  procChart.setOption({
+    tooltip:{trigger:'axis',axisPointer:{type:'shadow'}},
+    grid:{left:2,right:40,bottom:2,top:6,containLabel:true},
+    xAxis:{type:'value',axisLabel:{color:'#8899aa',fontSize:9},splitLine:{lineStyle:{color:'#1e3040'}}},
+    yAxis:{type:'category',data:['旗舰(8Elite/9400+)','高端(8Gen3/9300)','中高端(Gen1-2/9200)','中端(865/9000及以下)','不清楚配置','(PC用户)'].reverse(),
+      axisLabel:{color:'#ccc',fontSize:9},axisLine:{show:false},axisTick:{show:false},inverse:true},
+    series:[{type:'bar',
+      data:[dev.proc.elite,dev.proc.gen3,dev.proc.gen1_2,dev.proc.low,dev.proc.unknown,dev.proc.skip].reverse().map(function(v,i){
+        return {value:v,itemStyle:{color:['#00e676','#66bb6a','#ffa726','#ef5350','#9e9e9e','#37474f'][i]}};
+      }),barWidth:18,label:{show:true,position:'right',color:'#ccc',fontSize:9,formatter:function(p){return p.value>0?p.value:'';}},
+      itemStyle:{borderRadius:[0,3,3,0]}}]
+  });
+
+  // RAM bar
+  var ramChart = echarts.init(document.getElementById('ram-'+key));
+  ramChart.setOption({
+    tooltip:{trigger:'axis',axisPointer:{type:'shadow'}},
+    grid:{left:2,right:35,bottom:2,top:6,containLabel:true},
+    xAxis:{type:'value',axisLabel:{color:'#8899aa',fontSize:9},splitLine:{lineStyle:{color:'#1e3040'}}},
+    yAxis:{type:'category',data:['16GB及以上','12GB','8GB','6GB','4GB及以下','不清楚','(PC用户)'].reverse(),
+      axisLabel:{color:'#ccc',fontSize:9},axisLine:{show:false},axisTick:{show:false},inverse:true},
+    series:[{type:'bar',
+      data:[dev.ram.g16,dev.ram.g12,dev.ram.g8,dev.ram.g6,dev.ram.g4,dev.ram.unknown,dev.ram.skip].reverse().map(function(v,i){
+        return {value:v,itemStyle:{color:['#00e676','#66bb6a','#ffa726','#ef6c00','#ef5350','#9e9e9e','#37474f'][i]}};
+      }),barWidth:16,label:{show:true,position:'right',color:'#ccc',fontSize:9,formatter:function(p){return p.value>0?p.value:'';}},
+      itemStyle:{borderRadius:[0,3,3,0]}}]
+  });
+
+  // GPU bar
+  var gpuChart = echarts.init(document.getElementById('gpu-'+key));
+  gpuChart.setOption({
+    tooltip:{trigger:'axis',axisPointer:{type:'shadow'}},
+    grid:{left:2,right:35,bottom:2,top:6,containLabel:true},
+    xAxis:{type:'value',axisLabel:{color:'#8899aa',fontSize:9},splitLine:{lineStyle:{color:'#1e3040'}}},
+    yAxis:{type:'category',data:['RTX 50系列','RTX 40系列','RTX 30系列','RTX 20及以下','AMD显卡','集成显卡','不清楚','(手机用户)'].reverse(),
+      axisLabel:{color:'#ccc',fontSize:9},axisLine:{show:false},axisTick:{show:false},inverse:true},
+    series:[{type:'bar',
+      data:[dev.gpu.rtx50,dev.gpu.rtx40,dev.gpu.rtx30,dev.gpu.rtxOther,dev.gpu.amd,dev.gpu.integrated,dev.gpu.unknown,dev.gpu.skip].reverse().map(function(v,i){
+        return {value:v,itemStyle:{color:['#00e676','#66bb6a','#ffa726','#ef6c00','#ce93d8','#42a5f5','#9e9e9e','#37474f'][i]}};
+      }),barWidth:16,label:{show:true,position:'right',color:'#ccc',fontSize:9,formatter:function(p){return p.value>0?p.value:'';}},
+      itemStyle:{borderRadius:[0,3,3,0]}}]
   });
 
   // Platform pie
@@ -720,11 +852,11 @@ function renderChannel(key) {
 
 // ====== Responsive ======
 window.addEventListener('resize',function(){
-  ['ov-compare','ov-quality','ov-identity','ov-device','ov-platform'].forEach(function(id){
+  ['ov-compare','ov-quality','ov-identity','ov-device','ov-platform','ov-proc','ov-gpu','ov-ram'].forEach(function(id){
     var el=document.getElementById(id); if(el && el.clientWidth>0) echarts.getInstanceByDom(el)?.resize();
   });
   CHS.forEach(function(ch){
-    ['pie-','bar-','plat-','cat-','sankey-'].forEach(function(pre){
+    ['pie-','bar-','plat-','cat-','sankey-','proc-','ram-','gpu-'].forEach(function(pre){
       var el=document.getElementById(pre+ch.key); if(el && el.clientWidth>0) echarts.getInstanceByDom(el)?.resize();
     });
   });
