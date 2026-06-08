@@ -329,6 +329,10 @@ function dedupAcrossChannels(results) {
     else dedupDevice.gpu.unknown++;
   }
 
+  // 按平台分用户数：答了处理器=手机用户，答了显卡=PC用户（可重叠）
+  dedupDevice.mobileUsers = afterTotal - dedupDevice.proc.skip;
+  dedupDevice.pcUsers    = afterTotal - dedupDevice.gpu.skip;
+
   return {
     beforeTotal,
     afterTotal,
@@ -536,22 +540,39 @@ function generateCombinedHTML(data, dedup, intervalMin) {
       </div>
     </div>
 
-    <!-- 去重后高端设备筛选 KPI -->
-    <div class="cards" style="margin-bottom:18px;">
-      <div class="card" style="border:1px solid #ce93d8;">
-        <div class="num" style="color:#ce93d8;">${(dedup.dedupDevice.proc.elite + dedup.dedupDevice.proc.gen3).toLocaleString()}</div>
-        <div class="label">📱 旗舰+高端处理器</div>
-        <div style="font-size:11px;color:#ce93d8;margin-top:2px;">占去重后 ${dedup.afterTotal > 0 ? ((dedup.dedupDevice.proc.elite + dedup.dedupDevice.proc.gen3) / dedup.afterTotal * 100).toFixed(1) : '0.0'}%</div>
+    <!-- 去重后高端设备筛选 KPI — 手机 / PC 分开 -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;">
+      <!-- 手机设备 -->
+      <div style="background:#1a2a3a;border:1px solid #42a5f5;border-radius:10px;padding:14px;">
+        <h3 style="font-size:13px;color:#42a5f5;margin-bottom:10px;">📱 手机设备（去重后 ${dedup.dedupDevice.mobileUsers.toLocaleString()} 人）</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div class="mc" style="background:#0a1625;">
+            <div class="n" style="color:#ce93d8;font-size:20px;">${(dedup.dedupDevice.proc.elite + dedup.dedupDevice.proc.gen3).toLocaleString()}</div>
+            <div class="l">旗舰+高端处理器</div>
+            <div style="font-size:10px;color:#ce93d8;">${dedup.dedupDevice.mobileUsers > 0 ? ((dedup.dedupDevice.proc.elite + dedup.dedupDevice.proc.gen3) / dedup.dedupDevice.mobileUsers * 100).toFixed(1) : '0.0'}%</div>
+          </div>
+          <div class="mc" style="background:#0a1625;">
+            <div class="n" style="color:#ce93d8;font-size:20px;">${(dedup.dedupDevice.ram.g16 + dedup.dedupDevice.ram.g12).toLocaleString()}</div>
+            <div class="l">大内存 12GB+</div>
+            <div style="font-size:10px;color:#ce93d8;">${dedup.dedupDevice.mobileUsers > 0 ? ((dedup.dedupDevice.ram.g16 + dedup.dedupDevice.ram.g12) / dedup.dedupDevice.mobileUsers * 100).toFixed(1) : '0.0'}%</div>
+          </div>
+        </div>
       </div>
-      <div class="card" style="border:1px solid #ce93d8;">
-        <div class="num" style="color:#ce93d8;">${(dedup.dedupDevice.gpu.rtx50 + dedup.dedupDevice.gpu.rtx40).toLocaleString()}</div>
-        <div class="label">🖥️ 高端显卡 (RTX 40/50)</div>
-        <div style="font-size:11px;color:#ce93d8;margin-top:2px;">占去重后 ${dedup.afterTotal > 0 ? ((dedup.dedupDevice.gpu.rtx50 + dedup.dedupDevice.gpu.rtx40) / dedup.afterTotal * 100).toFixed(1) : '0.0'}%</div>
-      </div>
-      <div class="card" style="border:1px solid #ce93d8;">
-        <div class="num" style="color:#ce93d8;">${(dedup.dedupDevice.ram.g16 + dedup.dedupDevice.ram.g12).toLocaleString()}</div>
-        <div class="label">💾 大内存 (12GB+)</div>
-        <div style="font-size:11px;color:#ce93d8;margin-top:2px;">占去重后 ${dedup.afterTotal > 0 ? ((dedup.dedupDevice.ram.g16 + dedup.dedupDevice.ram.g12) / dedup.afterTotal * 100).toFixed(1) : '0.0'}%</div>
+      <!-- PC设备 -->
+      <div style="background:#1a2a3a;border:1px solid #5c6bc0;border-radius:10px;padding:14px;">
+        <h3 style="font-size:13px;color:#5c6bc0;margin-bottom:10px;">🖥️ PC设备（去重后 ${dedup.dedupDevice.pcUsers.toLocaleString()} 人）</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div class="mc" style="background:#0a1625;">
+            <div class="n" style="color:#ce93d8;font-size:20px;">${(dedup.dedupDevice.gpu.rtx50 + dedup.dedupDevice.gpu.rtx40).toLocaleString()}</div>
+            <div class="l">RTX 40/50 系列</div>
+            <div style="font-size:10px;color:#ce93d8;">${dedup.dedupDevice.pcUsers > 0 ? ((dedup.dedupDevice.gpu.rtx50 + dedup.dedupDevice.gpu.rtx40) / dedup.dedupDevice.pcUsers * 100).toFixed(1) : '0.0'}%</div>
+          </div>
+          <div class="mc" style="background:#0a1625;">
+            <div class="n" style="color:#ffa726;font-size:20px;">${(dedup.dedupDevice.gpu.rtx50 + dedup.dedupDevice.gpu.rtx40 + dedup.dedupDevice.gpu.rtx30).toLocaleString()}</div>
+            <div class="l">RTX 30/40/50 系列</div>
+            <div style="font-size:10px;color:#ffa726;">${dedup.dedupDevice.pcUsers > 0 ? ((dedup.dedupDevice.gpu.rtx50 + dedup.dedupDevice.gpu.rtx40 + dedup.dedupDevice.gpu.rtx30) / dedup.dedupDevice.pcUsers * 100).toFixed(1) : '0.0'}%</div>
+          </div>
+        </div>
       </div>
     </div>
 

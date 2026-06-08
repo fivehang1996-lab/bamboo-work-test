@@ -86,7 +86,7 @@
       <span class="live-badge"><span class="live-dot"></span><span class="live-text">LIVE</span></span>
     </div>
     <div class="update-info">
-      <div>最后更新 <span class="time">2026/6/8 16:08:55</span></div>
+      <div>最后更新 <span class="time">2026/6/8 16:19:46</span></div>
       <div class="countdown" id="countdown">下次刷新: 计算中...</div>
     </div>
   </div>
@@ -126,22 +126,39 @@
       </div>
     </div>
 
-    <!-- 去重后高端设备筛选 KPI -->
-    <div class="cards" style="margin-bottom:18px;">
-      <div class="card" style="border:1px solid #ce93d8;">
-        <div class="num" style="color:#ce93d8;">8,000</div>
-        <div class="label">📱 旗舰+高端处理器</div>
-        <div style="font-size:11px;color:#ce93d8;margin-top:2px;">占去重后 58.8%</div>
+    <!-- 去重后高端设备筛选 KPI — 手机 / PC 分开 -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;">
+      <!-- 手机设备 -->
+      <div style="background:#1a2a3a;border:1px solid #42a5f5;border-radius:10px;padding:14px;">
+        <h3 style="font-size:13px;color:#42a5f5;margin-bottom:10px;">📱 手机设备（去重后 11,490 人）</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div class="mc" style="background:#0a1625;">
+            <div class="n" style="color:#ce93d8;font-size:20px;">8,000</div>
+            <div class="l">旗舰+高端处理器</div>
+            <div style="font-size:10px;color:#ce93d8;">69.6%</div>
+          </div>
+          <div class="mc" style="background:#0a1625;">
+            <div class="n" style="color:#ce93d8;font-size:20px;">10,525</div>
+            <div class="l">大内存 12GB+</div>
+            <div style="font-size:10px;color:#ce93d8;">91.6%</div>
+          </div>
+        </div>
       </div>
-      <div class="card" style="border:1px solid #ce93d8;">
-        <div class="num" style="color:#ce93d8;">4,751</div>
-        <div class="label">🖥️ 高端显卡 (RTX 40/50)</div>
-        <div style="font-size:11px;color:#ce93d8;margin-top:2px;">占去重后 34.9%</div>
-      </div>
-      <div class="card" style="border:1px solid #ce93d8;">
-        <div class="num" style="color:#ce93d8;">10,525</div>
-        <div class="label">💾 大内存 (12GB+)</div>
-        <div style="font-size:11px;color:#ce93d8;margin-top:2px;">占去重后 77.4%</div>
+      <!-- PC设备 -->
+      <div style="background:#1a2a3a;border:1px solid #5c6bc0;border-radius:10px;padding:14px;">
+        <h3 style="font-size:13px;color:#5c6bc0;margin-bottom:10px;">🖥️ PC设备（去重后 7,334 人）</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div class="mc" style="background:#0a1625;">
+            <div class="n" style="color:#ce93d8;font-size:20px;">4,751</div>
+            <div class="l">RTX 40/50 系列</div>
+            <div style="font-size:10px;color:#ce93d8;">64.8%</div>
+          </div>
+          <div class="mc" style="background:#0a1625;">
+            <div class="n" style="color:#ffa726;font-size:20px;">5,816</div>
+            <div class="l">RTX 30/40/50 系列</div>
+            <div style="font-size:10px;color:#ffa726;">79.3%</div>
+          </div>
+        </div>
       </div>
     </div>
 
