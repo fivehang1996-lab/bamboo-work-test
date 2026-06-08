@@ -249,6 +249,7 @@ function dedupAcrossChannels(results) {
       ram:       header.findIndex(c => c.includes('运行内存')),
       os:        header.findIndex(c => c.includes('PC设备的系统版本')),
       gpu:       header.findIndex(c => c.includes('显卡')),
+      ip:        header.findIndex(c => c.includes('IP')),
       trap:      header.findIndex(c => c.includes('18、')),
       phone:     phoneIdx,
       email:     header.findIndex(c => c.includes('邮箱')),
@@ -280,6 +281,7 @@ function dedupAcrossChannels(results) {
           proc: (row[idx.processor] || '').trim(),
           ram:  (row[idx.ram] || '').trim(),
           gpu:  (row[idx.gpu] || '').trim(),
+          ip:   (row[idx.ip] || '').trim(),
         });
         chCounts[ch.key]++;
       }
@@ -333,13 +335,70 @@ function dedupAcrossChannels(results) {
   dedupDevice.mobileUsers = afterTotal - dedupDevice.proc.skip;
   dedupDevice.pcUsers    = afterTotal - dedupDevice.gpu.skip;
 
+  // ——— 黄牛门禁：封禁可疑 IP ———
+  const BLOCKED_IPS = [
+    '27.29.247.107',   // 湖北孝感 — 25个手机号, 25个邮箱, 出生年份横跨17年
+    '183.253.100.165', // 福建莆田 — 9个手机号, 全数字QQ邮箱前缀
+  ];
+  let scalperBlocked = 0;
+  for (const [phone, entry] of phoneMap) {
+    if (BLOCKED_IPS.some(bad => entry.ip.includes(bad))) {
+      phoneMap.delete(phone);
+      chCounts[entry.channel]--;
+      scalperBlocked++;
+    }
+  }
+
+  // 重新计算设备统计（黄牛过滤后）
+  const dedupDeviceClean = {
+    proc: { elite:0, gen3:0, gen1_2:0, low:0, unknown:0, skip:0 },
+    ram:  { g16:0, g12:0, g8:0, g6:0, g4:0, unknown:0, skip:0 },
+    gpu:  { rtx50:0, rtx40:0, rtx30:0, rtxOther:0, amd:0, integrated:0, unknown:0, skip:0 },
+  };
+  for (const [, entry] of phoneMap) {
+    const p = entry.proc;
+    if (p === '(跳过)') dedupDeviceClean.proc.skip++;
+    else if (p.startsWith('不清楚')) dedupDeviceClean.proc.unknown++;
+    else if (p.includes('Elite') || p.includes('9400')) dedupDeviceClean.proc.elite++;
+    else if (p.includes('Gen3') || p.includes('9300')) dedupDeviceClean.proc.gen3++;
+    else if (p.includes('Gen1') || p.includes('Gen2') || p.includes('9200') || p.includes('870') || p.includes('888')) dedupDeviceClean.proc.gen1_2++;
+    else dedupDeviceClean.proc.low++;
+
+    const r = entry.ram;
+    if (r === '(跳过)') dedupDeviceClean.ram.skip++;
+    else if (r === '不清楚') dedupDeviceClean.ram.unknown++;
+    else if (r.includes('16')) dedupDeviceClean.ram.g16++;
+    else if (r.includes('12')) dedupDeviceClean.ram.g12++;
+    else if (r.includes('8')) dedupDeviceClean.ram.g8++;
+    else if (r.includes('6')) dedupDeviceClean.ram.g6++;
+    else dedupDeviceClean.ram.g4++;
+
+    const g = entry.gpu;
+    if (g === '(跳过)') dedupDeviceClean.gpu.skip++;
+    else if (g.startsWith('不清楚')) dedupDeviceClean.gpu.unknown++;
+    else if (g.includes('RTX50')) dedupDeviceClean.gpu.rtx50++;
+    else if (g.includes('RTX40')) dedupDeviceClean.gpu.rtx40++;
+    else if (g.includes('RTX30')) dedupDeviceClean.gpu.rtx30++;
+    else if (g.includes('RTX')) dedupDeviceClean.gpu.rtxOther++;
+    else if (g.includes('AMD')) dedupDeviceClean.gpu.amd++;
+    else if (g.includes('集成')) dedupDeviceClean.gpu.integrated++;
+    else dedupDeviceClean.gpu.unknown++;
+  }
+  dedupDeviceClean.mobileUsers = phoneMap.size - dedupDeviceClean.proc.skip;
+  dedupDeviceClean.pcUsers    = phoneMap.size - dedupDeviceClean.gpu.skip;
+
+  const finalTotal = phoneMap.size;
+
   return {
     beforeTotal,
     afterTotal,
     duplicates,
     retained: chCounts,
     dupRate: beforeTotal > 0 ? ((duplicates / beforeTotal) * 100).toFixed(1) : '0.0',
-    dedupDevice,
+    dedupDevice: dedupDeviceClean,
+    scalperBlocked,
+    finalTotal,
+    blockedIPs: BLOCKED_IPS,
   };
 }
 
@@ -526,15 +585,17 @@ function generateCombinedHTML(data, dedup, intervalMin) {
       <div class="chart-box full" style="background:#0f1923;border:1px solid #2a3a4a;">
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
           <div>
-            <h3 style="font-size:14px;color:#fff;margin-bottom:4px;">🔗 跨渠道去重</h3>
-            <p style="font-size:11px;color:#8899aa;">去重规则：按手机号匹配，跨渠道重复时优先保留 <b style="color:#42a5f5;">TapTap</b> &gt; <b style="color:#ef5350;">好游快爆</b> &gt; <b style="color:#ffa726;">主站</b></p>
+            <h3 style="font-size:14px;color:#fff;margin-bottom:4px;">🔗 跨渠道去重 → 🛡️ 黄牛门禁</h3>
+            <p style="font-size:11px;color:#8899aa;">去重：按手机号匹配，TapTap &gt; 好游快爆 &gt; 主站 | 门禁：封禁可疑IP（湖北孝感/福建莆田黄牛）</p>
           </div>
-          <div style="display:flex;gap:20px;text-align:center;">
-            <div><div style="font-size:24px;font-weight:bold;color:#4fc3f7;">${validAll.toLocaleString()}</div><div style="font-size:10px;color:#8899aa;">去重前有效</div></div>
-            <div style="color:#667788;font-size:20px;align-self:center;">−</div>
-            <div><div style="font-size:24px;font-weight:bold;color:#ef5350;">${dedup.duplicates.toLocaleString()}</div><div style="font-size:10px;color:#8899aa;">跨渠道重复</div></div>
-            <div style="color:#667788;font-size:20px;align-self:center;">=</div>
-            <div><div style="font-size:24px;font-weight:bold;color:#66bb6a;">${dedup.afterTotal.toLocaleString()}</div><div style="font-size:10px;color:#8899aa;">去重后唯一用户</div></div>
+          <div style="display:flex;gap:16px;text-align:center;flex-wrap:wrap;">
+            <div><div style="font-size:22px;font-weight:bold;color:#4fc3f7;">${validAll.toLocaleString()}</div><div style="font-size:10px;color:#8899aa;">去重前有效</div></div>
+            <div style="color:#667788;font-size:18px;align-self:center;">−</div>
+            <div><div style="font-size:22px;font-weight:bold;color:#ef5350;">${dedup.duplicates.toLocaleString()}</div><div style="font-size:10px;color:#8899aa;">跨渠道重复</div></div>
+            <div style="color:#667788;font-size:18px;align-self:center;">−</div>
+            <div><div style="font-size:22px;font-weight:bold;color:#ffa726;">${dedup.scalperBlocked.toLocaleString()}</div><div style="font-size:10px;color:#8899aa;">🛡️黄牛拦截</div></div>
+            <div style="color:#667788;font-size:18px;align-self:center;">=</div>
+            <div><div style="font-size:28px;font-weight:bold;color:#66bb6a;">${dedup.finalTotal.toLocaleString()}</div><div style="font-size:10px;color:#8899aa;">最终可用用户</div></div>
           </div>
         </div>
       </div>
@@ -544,7 +605,7 @@ function generateCombinedHTML(data, dedup, intervalMin) {
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;">
       <!-- 手机设备 -->
       <div style="background:#1a2a3a;border:1px solid #42a5f5;border-radius:10px;padding:14px;">
-        <h3 style="font-size:13px;color:#42a5f5;margin-bottom:10px;">📱 手机设备（去重后 ${dedup.dedupDevice.mobileUsers.toLocaleString()} 人）</h3>
+        <h3 style="font-size:13px;color:#42a5f5;margin-bottom:10px;">📱 手机设备（门禁后 ${dedup.dedupDevice.mobileUsers.toLocaleString()} 人）</h3>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
           <div class="mc" style="background:#0a1625;">
             <div class="n" style="color:#ce93d8;font-size:20px;">${(dedup.dedupDevice.proc.elite + dedup.dedupDevice.proc.gen3).toLocaleString()}</div>
@@ -560,7 +621,7 @@ function generateCombinedHTML(data, dedup, intervalMin) {
       </div>
       <!-- PC设备 -->
       <div style="background:#1a2a3a;border:1px solid #5c6bc0;border-radius:10px;padding:14px;">
-        <h3 style="font-size:13px;color:#5c6bc0;margin-bottom:10px;">🖥️ PC设备（去重后 ${dedup.dedupDevice.pcUsers.toLocaleString()} 人）</h3>
+        <h3 style="font-size:13px;color:#5c6bc0;margin-bottom:10px;">🖥️ PC设备（门禁后 ${dedup.dedupDevice.pcUsers.toLocaleString()} 人）</h3>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
           <div class="mc" style="background:#0a1625;">
             <div class="n" style="color:#ce93d8;font-size:20px;">${(dedup.dedupDevice.gpu.rtx50 + dedup.dedupDevice.gpu.rtx40).toLocaleString()}</div>
