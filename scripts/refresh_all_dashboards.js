@@ -17,7 +17,7 @@ const CHANNELS = [
 const OUTPUT_HTML = 'D:\\claude\\index.html';
 const DATA_DIR   = 'D:\\claude\\问卷数据';
 const LOG_FILE   = 'D:\\claude\\问卷数据\\刷新日志_全渠道.md';
-const REFRESH_MIN = 30;
+const REFRESH_MIN = 240;
 
 const NOW = new Date();
 const NOW_YEAR  = NOW.getFullYear();
