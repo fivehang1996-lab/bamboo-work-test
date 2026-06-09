@@ -314,7 +314,9 @@ function cleanSurveyGC(xlsxData, label) {
     { key:'time_long',  cat:'quality',  label:'答题超时(>6000s)',  check: r => { const s = parseSeconds(r[2]); return s !== null && s > 6000; } },
     { key:'trap',       cat:'quality',  label:'陷阱题(射击类)',    check: r => { const v = (r[15] || '').trim(); return v.split('，').map(x => x.trim()).includes('H'); } },
     { key:'abandon',    cat:'quality',  label:'放弃参与',          check: r => (r[3] || '').trim() === 'B' },
-    { key:'os_other',   cat:'device',   label:'PC系统选其他',      check: r => { const v = (r[8] || '').trim(); return v === 'D' || v === 'E'; } },
+    { key:'q9_proc',    cat:'device',   label:'Q6不清楚处理器',    check: r => (r[6] || '').trim() === 'E' },
+    { key:'q10_ram',    cat:'device',   label:'Q7不清楚内存',      check: r => (r[7] || '').trim() === 'F' },
+    { key:'os_other',   cat:'device',   label:'Q8 PC系统选其他',   check: r => { const v = (r[8] || '').trim(); return v === 'D' || v === 'E'; } },
   ];
 
   let total = 0, validCount = 0;
@@ -649,7 +651,9 @@ function generateCombinedHTML(data, dedup, intervalMin) {
         { name:'答题超时(>6000s)', val:ch.d.ruleHits.time_long||0,  color:catColors.quality },
         { name:'陷阱题(射击类)',   val:ch.d.ruleHits.trap||0,       color:catColors.quality },
         { name:'放弃参与',        val:ch.d.ruleHits.abandon||0,     color:catColors.quality },
-        { name:'PC系统选其他',    val:ch.d.ruleHits.os_other||0,    color:catColors.device },
+        { name:'Q6不清楚处理器',  val:ch.d.ruleHits.q9_proc||0,     color:catColors.device },
+        { name:'Q7不清楚内存',    val:ch.d.ruleHits.q10_ram||0,     color:catColors.device },
+        { name:'Q8 PC系统选其他', val:ch.d.ruleHits.os_other||0,    color:catColors.device },
       ] : [
         { name:'答题过快(<60s)',   val:ch.d.ruleHits.time_short, color:catColors.quality },
         { name:'答题超时(>6000s)', val:ch.d.ruleHits.time_long,  color:catColors.quality },
@@ -952,7 +956,7 @@ function generateCombinedHTML(data, dedup, intervalMin) {
       <div class="card orange"><div class="num">${gc.rate}%</div><div class="label">有效回收率</div></div>
     </div>
     <div class="rule-box">
-      <h3>📋 清洗规则（2 类 × 5 条）</h3>
+      <h3>📋 清洗规则（2 类 × 7 条）</h3>
       <div class="cat-section">
         <span class="cat-title quality">🔵 一、答题质量</span>
         <div class="rule-grid" style="grid-template-columns:1fr 1fr 1fr 1fr;">
@@ -965,7 +969,9 @@ function generateCombinedHTML(data, dedup, intervalMin) {
       <div class="cat-section" style="margin-bottom:0;">
         <span class="cat-title device">🟠 二、设备甄别</span>
         <div class="rule-grid">
-          <div class="rule-item" style="border-left-color:#ffa726;"><span>PC系统选其他</span><span style="font-size:9px;color:#8899aa;">D或E</span><span class="hit" style="color:#ffcc80;">${gc.ruleHits.os_other||0}</span></div>
+          <div class="rule-item" style="border-left-color:#ffa726;"><span>Q6不清楚处理器</span><span style="font-size:9px;color:#8899aa;">选E</span><span class="hit" style="color:#ffcc80;">${gc.ruleHits.q9_proc||0}</span></div>
+          <div class="rule-item" style="border-left-color:#ffa726;"><span>Q7不清楚内存</span><span style="font-size:9px;color:#8899aa;">选F</span><span class="hit" style="color:#ffcc80;">${gc.ruleHits.q10_ram||0}</span></div>
+          <div class="rule-item" style="border-left-color:#ffa726;"><span>Q8 PC系统选其他</span><span style="font-size:9px;color:#8899aa;">D或E</span><span class="hit" style="color:#ffcc80;">${gc.ruleHits.os_other||0}</span></div>
         </div>
       </div>
     </div>
