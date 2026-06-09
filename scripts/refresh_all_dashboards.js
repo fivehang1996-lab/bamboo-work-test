@@ -629,8 +629,10 @@ else fs.appendFileSync(LOG_FILE, logEntry, 'utf-8');
 // ======================== HTML 模板 ========================
 function generateCombinedHTML(data, dedup, intervalMin) {
   const chs = CHANNELS.map(ch => ({ ...ch, d: data[ch.key] }));
-  const totalAll = chs.reduce((s, c) => s + (c.d?.total || 0), 0);
-  const validAll = chs.reduce((s, c) => s + (c.d?.valid || 0), 0);
+  const chs3 = chs.filter(c => !c.d?._gc); // 三渠道
+  const gc = data.gamecenter;              // GameCenter 独立
+  const totalAll = chs3.reduce((s, c) => s + (c.d?.total || 0), 0);
+  const validAll = chs3.reduce((s, c) => s + (c.d?.valid || 0), 0);
   const invalidAll = totalAll - validAll;
   const rateAll = totalAll > 0 ? ((validAll / totalAll) * 100).toFixed(1) : '0.0';
 
@@ -852,7 +854,7 @@ function generateCombinedHTML(data, dedup, intervalMin) {
     </div>
 
     <div class="overview-channels">
-      ${chs.map(ch => {
+      ${chs3.map(ch => {
         if (!ch.d) return '';
         const cq = ch.d.catHits.quality || 0, ci = ch.d.catHits.identity || 0, cd = ch.d.catHits.device || 0;
         const mc = catColors;
@@ -862,10 +864,21 @@ function generateCombinedHTML(data, dedup, intervalMin) {
             <div class="mc"><div class="n" style="color:#4fc3f7">${(ch.d.total||0).toLocaleString()}</div><div class="l">原始答卷</div></div>
             <div class="mc"><div class="n" style="color:#66bb6a">${(ch.d.valid||0).toLocaleString()}</div><div class="l">有效答卷</div></div>
             <div class="mc"><div class="n" style="color:#ef5350">${(ch.d.invalid||0).toLocaleString()}</div><div class="l">剔除无效</div></div>
-            <div class="mc"><div class="n" style="color:#ce93d8">${ch.d._gc ? (ch.d.valid||0).toLocaleString() : (dedup.retained[ch.key]||0).toLocaleString()}</div><div class="l">${ch.d._gc ? '有效答卷' : '去重后留存'}</div></div>
+            <div class="mc"><div class="n" style="color:#ce93d8">${(dedup.retained[ch.key]||0).toLocaleString()}</div><div class="l">去重后留存</div></div>
           </div>
         </div>`;
       }).join('')}
+      ${gc ? `
+      <div class="ov-card" style="border:1px dashed #ffa726;">
+        <h3 style="color:#ffa726;">🕹️ GameCenter（独立清洗）</h3>
+        <div class="mini-cards">
+          <div class="mc"><div class="n" style="color:#4fc3f7">${gc.total.toLocaleString()}</div><div class="l">原始答卷</div></div>
+          <div class="mc"><div class="n" style="color:#66bb6a">${gc.valid.toLocaleString()}</div><div class="l">有效答卷</div></div>
+          <div class="mc"><div class="n" style="color:#ef5350">${gc.invalid.toLocaleString()}</div><div class="l">剔除无效</div></div>
+          <div class="mc"><div class="n" style="color:#ce93d8">${gc.valid.toLocaleString()}</div><div class="l">直接叠加</div></div>
+        </div>
+        <p style="font-size:10px;color:#ffa726;margin-top:6px;">⚠️ 独立清洗(7规则)，无手机号无法去重</p>
+      </div>` : ''}
     </div>
 
     <div class="chart-row">
@@ -990,7 +1003,7 @@ function generateCombinedHTML(data, dedup, intervalMin) {
 
 <script>
 var DATA = ${JSON.stringify(chartsData)};
-var CHS = ${JSON.stringify(chs.map(ch => ({ key:ch.key, name:ch.name })))};
+var CHS = ${JSON.stringify(chs3.map(ch => ({ key:ch.key, name:ch.name })))};
 var green='#66bb6a', red='#ef5350', blue='#4fc3f7', orange='#ffa726';
 var catQuality='#4fc3f7', catIdentity='#66bb6a', catDevice='#ffa726';
 var catColors = { quality: catQuality, identity: catIdentity, device: catDevice };
