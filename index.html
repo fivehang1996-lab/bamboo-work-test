@@ -86,7 +86,7 @@
       <span class="live-badge"><span class="live-dot"></span><span class="live-text">LIVE</span></span>
     </div>
     <div class="update-info">
-      <div>最后更新 <span class="time">2026/6/9 10:41:09</span></div>
+      <div>最后更新 <span class="time">2026/6/9 11:12:03</span></div>
       <div class="countdown" id="countdown">下次刷新: 计算中...</div>
     </div>
   </div>
@@ -128,37 +128,47 @@
       </div>
     </div>
 
-    <!-- 去重后高端设备筛选 KPI — 手机 / PC 分开 -->
+    <!-- 高端设备筛选 KPI — 手机 / PC 分开 -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;">
-      <!-- 手机设备 -->
+      <!-- 手机高端 = 旗舰+高端处理器 OR iOS -->
       <div style="background:#1a2a3a;border:1px solid #42a5f5;border-radius:10px;padding:14px;">
-        <h3 style="font-size:13px;color:#42a5f5;margin-bottom:10px;">📱 手机设备（门禁后 11,706 人）</h3>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <h3 style="font-size:13px;color:#42a5f5;margin-bottom:10px;">📱 手机高端设备（门禁后 11,706 人）</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
           <div class="mc" style="background:#0a1625;">
-            <div class="n" style="color:#ce93d8;font-size:20px;">8,134</div>
+            <div class="n" style="color:#ce93d8;font-size:18px;">8,134</div>
             <div class="l">旗舰+高端处理器</div>
             <div style="font-size:10px;color:#ce93d8;">69.5%</div>
           </div>
           <div class="mc" style="background:#0a1625;">
-            <div class="n" style="color:#ce93d8;font-size:20px;">10,721</div>
-            <div class="l">大内存 12GB+</div>
-            <div style="font-size:10px;color:#ce93d8;">91.6%</div>
+            <div class="n" style="color:#ce93d8;font-size:18px;">129</div>
+            <div class="l">iOS 设备</div>
+            <div style="font-size:10px;color:#ce93d8;">1.1%</div>
+          </div>
+          <div class="mc" style="background:#0f1923;border:1px solid #66bb6a;">
+            <div class="n" style="color:#66bb6a;font-size:22px;">8,235</div>
+            <div class="l">✅ 手机高端合计</div>
+            <div style="font-size:10px;color:#66bb6a;">70.3%</div>
           </div>
         </div>
       </div>
-      <!-- PC设备 -->
+      <!-- PC高端 = RTX 30/40/50 + AMD中高端（>= RTX 3060） -->
       <div style="background:#1a2a3a;border:1px solid #5c6bc0;border-radius:10px;padding:14px;">
-        <h3 style="font-size:13px;color:#5c6bc0;margin-bottom:10px;">🖥️ PC设备（门禁后 7,495 人）</h3>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <h3 style="font-size:13px;color:#5c6bc0;margin-bottom:10px;">🖥️ PC高端设备（门禁后 7,495 人）</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
           <div class="mc" style="background:#0a1625;">
-            <div class="n" style="color:#ce93d8;font-size:20px;">4,848</div>
-            <div class="l">RTX 40/50 系列</div>
-            <div style="font-size:10px;color:#ce93d8;">64.7%</div>
+            <div class="n" style="color:#ce93d8;font-size:18px;">5,935</div>
+            <div class="l">RTX 30/40/50 系列</div>
+            <div style="font-size:10px;color:#ce93d8;">79.2%</div>
           </div>
           <div class="mc" style="background:#0a1625;">
-            <div class="n" style="color:#ffa726;font-size:20px;">5,935</div>
-            <div class="l">RTX 30/40/50 系列</div>
-            <div style="font-size:10px;color:#ffa726;">79.2%</div>
+            <div class="n" style="color:#ce93d8;font-size:18px;">470</div>
+            <div class="l">AMD 中高端</div>
+            <div style="font-size:10px;color:#ce93d8;">6.3%</div>
+          </div>
+          <div class="mc" style="background:#0f1923;border:1px solid #66bb6a;">
+            <div class="n" style="color:#66bb6a;font-size:22px;">6,405</div>
+            <div class="l">✅ PC高端合计</div>
+            <div style="font-size:10px;color:#66bb6a;">85.5%</div>
           </div>
         </div>
       </div>

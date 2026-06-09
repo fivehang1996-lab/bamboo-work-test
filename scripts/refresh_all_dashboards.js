@@ -41,6 +41,21 @@ function isValidEmail(s) {
 }
 function isValidId(s) { return s && /^\d+$/.test(s.trim()); }
 
+// AMD GPU 性能分级: >= RTX 3060 为高端
+function isAmdHighEnd(gpuStr) {
+  const g = (gpuStr || '').trim();
+  if (!g.includes('AMD') && !g.includes('Radeon')) return false;
+  // RX 9000/7000 全系列 >= RTX 3060
+  if (g.includes('RX 9000') || g.includes('RX 90') || g.includes('RX 7000') || g.includes('RX 78') || g.includes('RX 79') || g.includes('RX 77')) return true;
+  // RX 6000: 6600+ >= RTX 3060; 6500/6400 低于
+  if (g.includes('RX 6800') || g.includes('RX 6950') || g.includes('RX 6750') || g.includes('RX 6700') || g.includes('RX 6650') || g.includes('RX 6600')) return true;
+  if (g.includes('RX 6500') || g.includes('RX 6400') || g.includes('RX 56') || g.includes('RX 55')) return false;
+  // RX 5700 ≈ RTX 3060
+  if (g.includes('RX 5700')) return true;
+  // 其他AMD/不确定的AMD系列 按保守处理不算高端
+  return false;
+}
+
 // ======================== 下载 CSV ========================
 function downloadCSV(vid, label) {
   const csvPath = `${DATA_DIR}\\焕梦_${label}_原始.csv`;
@@ -250,6 +265,7 @@ function dedupAcrossChannels(results) {
       os:        header.findIndex(c => c.includes('PC设备的系统版本')),
       gpu:       header.findIndex(c => c.includes('显卡')),
       ip:        header.findIndex(c => c.includes('IP')),
+      platform:  header.findIndex(c => c.includes('设备平台')),
       trap:      header.findIndex(c => c.includes('18、')),
       phone:     phoneIdx,
       email:     header.findIndex(c => c.includes('邮箱')),
@@ -282,6 +298,7 @@ function dedupAcrossChannels(results) {
           ram:  (row[idx.ram] || '').trim(),
           gpu:  (row[idx.gpu] || '').trim(),
           ip:   (row[idx.ip] || '').trim(),
+          platform: (row[idx.platform] || '').replace(/\*.*?\*/g, '').trim(),
         });
         chCounts[ch.key]++;
       }
@@ -292,11 +309,11 @@ function dedupAcrossChannels(results) {
   const afterTotal = phoneMap.size;
   const duplicates = beforeTotal - afterTotal;
 
-  // 去重后设备分层统计（复用 cleanSurvey 的分类逻辑）
+  // 去重后设备分层统计（含 AMD 分级）
   const dedupDevice = {
     proc: { elite:0, gen3:0, gen1_2:0, low:0, unknown:0, skip:0 },
     ram:  { g16:0, g12:0, g8:0, g6:0, g4:0, unknown:0, skip:0 },
-    gpu:  { rtx50:0, rtx40:0, rtx30:0, rtxOther:0, amd:0, integrated:0, unknown:0, skip:0 },
+    gpu:  { rtx50:0, rtx40:0, rtx30:0, rtxOther:0, amdHigh:0, amdLow:0, integrated:0, unknown:0, skip:0 },
   };
   for (const [, entry] of phoneMap) {
     // 处理器分层
@@ -318,7 +335,7 @@ function dedupAcrossChannels(results) {
     else if (r.includes('6')) dedupDevice.ram.g6++;
     else dedupDevice.ram.g4++;
 
-    // 显卡分层
+    // 显卡分层（含 AMD 性能分级）
     const g = entry.gpu;
     if (g === '(跳过)') dedupDevice.gpu.skip++;
     else if (g.startsWith('不清楚')) dedupDevice.gpu.unknown++;
@@ -326,7 +343,8 @@ function dedupAcrossChannels(results) {
     else if (g.includes('RTX40')) dedupDevice.gpu.rtx40++;
     else if (g.includes('RTX30')) dedupDevice.gpu.rtx30++;
     else if (g.includes('RTX')) dedupDevice.gpu.rtxOther++;
-    else if (g.includes('AMD')) dedupDevice.gpu.amd++;
+    else if (isAmdHighEnd(g)) dedupDevice.gpu.amdHigh++;
+    else if (g.includes('AMD') || g.includes('Radeon') || g.includes('RX')) dedupDevice.gpu.amdLow++;
     else if (g.includes('集成')) dedupDevice.gpu.integrated++;
     else dedupDevice.gpu.unknown++;
   }
@@ -349,13 +367,18 @@ function dedupAcrossChannels(results) {
     }
   }
 
-  // 重新计算设备统计（黄牛过滤后）
+  // 重新计算设备统计（黄牛过滤后）— 含 AMD 分级 + iOS + 高端合并
   const dedupDeviceClean = {
     proc: { elite:0, gen3:0, gen1_2:0, low:0, unknown:0, skip:0 },
     ram:  { g16:0, g12:0, g8:0, g6:0, g4:0, unknown:0, skip:0 },
-    gpu:  { rtx50:0, rtx40:0, rtx30:0, rtxOther:0, amd:0, integrated:0, unknown:0, skip:0 },
+    gpu:  { rtx50:0, rtx40:0, rtx30:0, rtxOther:0, amdHigh:0, amdLow:0, integrated:0, unknown:0, skip:0 },
   };
+  let iosUsers = 0;
+  let mobileHighEnd = 0;  // elite + gen3 + iOS（去重）
+  let pcHighEnd = 0;      // RTX 30/40/50 + AMD高端（>= RTX 3060）
+
   for (const [, entry] of phoneMap) {
+    // ── 处理器 ──
     const p = entry.proc;
     if (p === '(跳过)') dedupDeviceClean.proc.skip++;
     else if (p.startsWith('不清楚')) dedupDeviceClean.proc.unknown++;
@@ -364,6 +387,7 @@ function dedupAcrossChannels(results) {
     else if (p.includes('Gen1') || p.includes('Gen2') || p.includes('9200') || p.includes('870') || p.includes('888')) dedupDeviceClean.proc.gen1_2++;
     else dedupDeviceClean.proc.low++;
 
+    // ── 内存 ──
     const r = entry.ram;
     if (r === '(跳过)') dedupDeviceClean.ram.skip++;
     else if (r === '不清楚') dedupDeviceClean.ram.unknown++;
@@ -373,6 +397,7 @@ function dedupAcrossChannels(results) {
     else if (r.includes('6')) dedupDeviceClean.ram.g6++;
     else dedupDeviceClean.ram.g4++;
 
+    // ── 显卡（含 AMD 性能分级）──
     const g = entry.gpu;
     if (g === '(跳过)') dedupDeviceClean.gpu.skip++;
     else if (g.startsWith('不清楚')) dedupDeviceClean.gpu.unknown++;
@@ -380,12 +405,28 @@ function dedupAcrossChannels(results) {
     else if (g.includes('RTX40')) dedupDeviceClean.gpu.rtx40++;
     else if (g.includes('RTX30')) dedupDeviceClean.gpu.rtx30++;
     else if (g.includes('RTX')) dedupDeviceClean.gpu.rtxOther++;
-    else if (g.includes('AMD')) dedupDeviceClean.gpu.amd++;
+    else if (isAmdHighEnd(g)) dedupDeviceClean.gpu.amdHigh++;
+    else if (g.includes('AMD') || g.includes('Radeon') || g.includes('RX')) dedupDeviceClean.gpu.amdLow++;
     else if (g.includes('集成')) dedupDeviceClean.gpu.integrated++;
     else dedupDeviceClean.gpu.unknown++;
+
+    // ── iOS ──
+    const plat = entry.platform || '';
+    if (plat.includes('iOS')) iosUsers++;
+
+    // ── 手机高端 = 旗舰+高端处理器 OR iOS ──
+    const isHighProc = p.includes('Elite') || p.includes('9400') || p.includes('Gen3') || p.includes('9300');
+    if (isHighProc || plat.includes('iOS')) mobileHighEnd++;
+
+    // ── PC高端 = RTX 30/40/50 + AMDHigh（>= RTX 3060）──
+    const isHighGpu = g.includes('RTX50') || g.includes('RTX40') || g.includes('RTX30') || isAmdHighEnd(g);
+    if (isHighGpu) pcHighEnd++;
   }
   dedupDeviceClean.mobileUsers = phoneMap.size - dedupDeviceClean.proc.skip;
   dedupDeviceClean.pcUsers    = phoneMap.size - dedupDeviceClean.gpu.skip;
+  dedupDeviceClean.iosUsers   = iosUsers;
+  dedupDeviceClean.mobileHighEnd = mobileHighEnd;
+  dedupDeviceClean.pcHighEnd     = pcHighEnd;
 
   const finalTotal = phoneMap.size;
 
@@ -601,37 +642,47 @@ function generateCombinedHTML(data, dedup, intervalMin) {
       </div>
     </div>
 
-    <!-- 去重后高端设备筛选 KPI — 手机 / PC 分开 -->
+    <!-- 高端设备筛选 KPI — 手机 / PC 分开 -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;">
-      <!-- 手机设备 -->
+      <!-- 手机高端 = 旗舰+高端处理器 OR iOS -->
       <div style="background:#1a2a3a;border:1px solid #42a5f5;border-radius:10px;padding:14px;">
-        <h3 style="font-size:13px;color:#42a5f5;margin-bottom:10px;">📱 手机设备（门禁后 ${dedup.dedupDevice.mobileUsers.toLocaleString()} 人）</h3>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <h3 style="font-size:13px;color:#42a5f5;margin-bottom:10px;">📱 手机高端设备（门禁后 ${dedup.dedupDevice.mobileUsers.toLocaleString()} 人）</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
           <div class="mc" style="background:#0a1625;">
-            <div class="n" style="color:#ce93d8;font-size:20px;">${(dedup.dedupDevice.proc.elite + dedup.dedupDevice.proc.gen3).toLocaleString()}</div>
+            <div class="n" style="color:#ce93d8;font-size:18px;">${(dedup.dedupDevice.proc.elite + dedup.dedupDevice.proc.gen3).toLocaleString()}</div>
             <div class="l">旗舰+高端处理器</div>
             <div style="font-size:10px;color:#ce93d8;">${dedup.dedupDevice.mobileUsers > 0 ? ((dedup.dedupDevice.proc.elite + dedup.dedupDevice.proc.gen3) / dedup.dedupDevice.mobileUsers * 100).toFixed(1) : '0.0'}%</div>
           </div>
           <div class="mc" style="background:#0a1625;">
-            <div class="n" style="color:#ce93d8;font-size:20px;">${(dedup.dedupDevice.ram.g16 + dedup.dedupDevice.ram.g12).toLocaleString()}</div>
-            <div class="l">大内存 12GB+</div>
-            <div style="font-size:10px;color:#ce93d8;">${dedup.dedupDevice.mobileUsers > 0 ? ((dedup.dedupDevice.ram.g16 + dedup.dedupDevice.ram.g12) / dedup.dedupDevice.mobileUsers * 100).toFixed(1) : '0.0'}%</div>
+            <div class="n" style="color:#ce93d8;font-size:18px;">${(dedup.dedupDevice.iosUsers || 0).toLocaleString()}</div>
+            <div class="l">iOS 设备</div>
+            <div style="font-size:10px;color:#ce93d8;">${dedup.dedupDevice.mobileUsers > 0 ? ((dedup.dedupDevice.iosUsers || 0) / dedup.dedupDevice.mobileUsers * 100).toFixed(1) : '0.0'}%</div>
+          </div>
+          <div class="mc" style="background:#0f1923;border:1px solid #66bb6a;">
+            <div class="n" style="color:#66bb6a;font-size:22px;">${(dedup.dedupDevice.mobileHighEnd || 0).toLocaleString()}</div>
+            <div class="l">✅ 手机高端合计</div>
+            <div style="font-size:10px;color:#66bb6a;">${dedup.dedupDevice.mobileUsers > 0 ? ((dedup.dedupDevice.mobileHighEnd || 0) / dedup.dedupDevice.mobileUsers * 100).toFixed(1) : '0.0'}%</div>
           </div>
         </div>
       </div>
-      <!-- PC设备 -->
+      <!-- PC高端 = RTX 30/40/50 + AMD中高端（>= RTX 3060） -->
       <div style="background:#1a2a3a;border:1px solid #5c6bc0;border-radius:10px;padding:14px;">
-        <h3 style="font-size:13px;color:#5c6bc0;margin-bottom:10px;">🖥️ PC设备（门禁后 ${dedup.dedupDevice.pcUsers.toLocaleString()} 人）</h3>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <h3 style="font-size:13px;color:#5c6bc0;margin-bottom:10px;">🖥️ PC高端设备（门禁后 ${dedup.dedupDevice.pcUsers.toLocaleString()} 人）</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
           <div class="mc" style="background:#0a1625;">
-            <div class="n" style="color:#ce93d8;font-size:20px;">${(dedup.dedupDevice.gpu.rtx50 + dedup.dedupDevice.gpu.rtx40).toLocaleString()}</div>
-            <div class="l">RTX 40/50 系列</div>
-            <div style="font-size:10px;color:#ce93d8;">${dedup.dedupDevice.pcUsers > 0 ? ((dedup.dedupDevice.gpu.rtx50 + dedup.dedupDevice.gpu.rtx40) / dedup.dedupDevice.pcUsers * 100).toFixed(1) : '0.0'}%</div>
+            <div class="n" style="color:#ce93d8;font-size:18px;">${(dedup.dedupDevice.gpu.rtx50 + dedup.dedupDevice.gpu.rtx40 + dedup.dedupDevice.gpu.rtx30).toLocaleString()}</div>
+            <div class="l">RTX 30/40/50 系列</div>
+            <div style="font-size:10px;color:#ce93d8;">${dedup.dedupDevice.pcUsers > 0 ? ((dedup.dedupDevice.gpu.rtx50 + dedup.dedupDevice.gpu.rtx40 + dedup.dedupDevice.gpu.rtx30) / dedup.dedupDevice.pcUsers * 100).toFixed(1) : '0.0'}%</div>
           </div>
           <div class="mc" style="background:#0a1625;">
-            <div class="n" style="color:#ffa726;font-size:20px;">${(dedup.dedupDevice.gpu.rtx50 + dedup.dedupDevice.gpu.rtx40 + dedup.dedupDevice.gpu.rtx30).toLocaleString()}</div>
-            <div class="l">RTX 30/40/50 系列</div>
-            <div style="font-size:10px;color:#ffa726;">${dedup.dedupDevice.pcUsers > 0 ? ((dedup.dedupDevice.gpu.rtx50 + dedup.dedupDevice.gpu.rtx40 + dedup.dedupDevice.gpu.rtx30) / dedup.dedupDevice.pcUsers * 100).toFixed(1) : '0.0'}%</div>
+            <div class="n" style="color:#ce93d8;font-size:18px;">${(dedup.dedupDevice.gpu.amdHigh || 0).toLocaleString()}</div>
+            <div class="l">AMD 中高端</div>
+            <div style="font-size:10px;color:#ce93d8;">${dedup.dedupDevice.pcUsers > 0 ? ((dedup.dedupDevice.gpu.amdHigh || 0) / dedup.dedupDevice.pcUsers * 100).toFixed(1) : '0.0'}%</div>
+          </div>
+          <div class="mc" style="background:#0f1923;border:1px solid #66bb6a;">
+            <div class="n" style="color:#66bb6a;font-size:22px;">${(dedup.dedupDevice.pcHighEnd || 0).toLocaleString()}</div>
+            <div class="l">✅ PC高端合计</div>
+            <div style="font-size:10px;color:#66bb6a;">${dedup.dedupDevice.pcUsers > 0 ? ((dedup.dedupDevice.pcHighEnd || 0) / dedup.dedupDevice.pcUsers * 100).toFixed(1) : '0.0'}%</div>
           </div>
         </div>
       </div>
