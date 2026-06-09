@@ -11,7 +11,7 @@ const CHANNELS = [
   { key: 'tap',        name: 'TapTap',      vid: '362635200', priority: 1 },
   { key: 'main',       name: '主站',         vid: '363467391', priority: 3 },
   { key: 'haoyou',     name: '好游快爆',     vid: '364883388', priority: 2 },
-  { key: 'gamecenter', name: 'GameCenter',   vid: null,        priority: 4, source: 'xlsx' },
+  { key: 'gamecenter', name: 'B站',          vid: null,        priority: 4, source: 'xlsx' },
 ];
 
 const OUTPUT_HTML = 'D:\\claude\\index.html';
@@ -58,7 +58,7 @@ function isAmdHighEnd(gpuStr) {
   return false;
 }
 
-// GPU 自由文本分类 (GameCenter 专用)
+// GPU 自由文本分类 (B站 专用)
 function classGpuGC(g) {
   const v = (g || '').trim();
   if (!v) return 'empty';
@@ -106,7 +106,7 @@ function classGpuGC(g) {
 function downloadCSV(vid, label) {
   const csvPath = `${DATA_DIR}\\焕梦_${label}_原始.csv`;
 
-  // GameCenter: 从本地 XLSX 读取，直接返回数据不写 CSV
+  // B站: 从本地 XLSX 读取，直接返回数据不写 CSV
   if (!vid) {
     try {
       const xlsxPath = 'C:/Users/zhuzi/Desktop/焕梦测试招募问卷2026-06-09-11-09-49.xlsx';
@@ -302,7 +302,7 @@ function cleanSurvey(csvPath, label) {
   };
 }
 
-// ======================== GameCenter 专用清洗 ========================
+// ======================== B站 专用清洗 ========================
 function cleanSurveyGC(xlsxData, label) {
   if (!xlsxData || !xlsxData.length) return null;
   const lines = xlsxData; // 直接使用内存中的二维数组
@@ -373,7 +373,7 @@ function cleanSurveyGC(xlsxData, label) {
     total, valid: validCount, invalid: total - validCount,
     rate: total > 0 ? ((validCount / total) * 100).toFixed(1) : '0.0',
     ruleHits, catHits, platform, device, updateTime: UPDATE_TIME,
-    _gc: true, // 标记为 GameCenter
+    _gc: true, // 标记为 B站
   };
 }
 
@@ -385,7 +385,7 @@ function dedupAcrossChannels(results) {
   const chCounts = { tap: 0, haoyou: 0, main: 0 };
 
   CHANNELS.forEach(ch => {
-    if (ch.source === 'xlsx') return; // GameCenter 无手机号，跳过去重
+    if (ch.source === 'xlsx') return; // B站 无手机号，跳过去重
     const csvPath = `${DATA_DIR}\\焕梦_${ch.name}_原始.csv`;
     if (!fs.existsSync(csvPath)) return;
     let raw = fs.readFileSync(csvPath, 'utf-8');
@@ -443,7 +443,7 @@ function dedupAcrossChannels(results) {
     }
   });
 
-  // GameCenter 无手机号不参与去重，仅统计三渠道
+  // B站 无手机号不参与去重，仅统计三渠道
   const beforeTotal = Object.values(results).reduce((s, d) => s + (d && !d._gc ? (d.valid || 0) : 0), 0);
   const afterTotal = phoneMap.size;
   const duplicates = beforeTotal - afterTotal;
@@ -609,7 +609,7 @@ console.log(`  三渠道去重前有效: ${dedup.beforeTotal.toLocaleString()}`)
 console.log(`  跨渠道重复: ${dedup.duplicates.toLocaleString()} 人`);
 console.log(`  三渠道去重后: ${dedup.afterTotal.toLocaleString()}`);
 console.log(`  各渠道留存: TapTap ${dedup.retained.tap} / 好游 ${dedup.retained.haoyou} / 主站 ${dedup.retained.main}`);
-console.log(`  GameCenter 直接叠加: +${gcValid.toLocaleString()} (无手机号)`);
+console.log(`  B站 直接叠加: +${gcValid.toLocaleString()} (无手机号)`);
 dedup.gcValid = gcValid;
 dedup.finalTotal = dedup.finalTotal + gcValid;
 console.log(`  四渠道合计最终: ${dedup.finalTotal.toLocaleString()}`);
@@ -622,7 +622,7 @@ console.log(`   文件: ${OUTPUT_HTML}`);
 
 // 日志
 const logEntry = `| ${UPDATE_TIME} | ${results.haoyou?.total||0} | ${results.haoyou?.valid||0} | ${results.tap?.total||0} | ${results.tap?.valid||0} | ${results.main?.total||0} | ${results.main?.valid||0} | ${results.gamecenter?.total||0} | ${results.gamecenter?.valid||0} |\n`;
-const logHeader = '| 刷新时间 | 好游快爆-原始 | 有效 | TapTap-原始 | 有效 | 主站-原始 | 有效 | GameCenter-原始 | 有效 |\n|----------|-------------|------|------------|------|----------|------|---------------|------|\n';
+const logHeader = '| 刷新时间 | 好游快爆-原始 | 有效 | TapTap-原始 | 有效 | 主站-原始 | 有效 | B站-原始 | 有效 |\n|----------|-------------|------|------------|------|----------|------|---------------|------|\n';
 if (!fs.existsSync(LOG_FILE)) fs.writeFileSync(LOG_FILE, logHeader + logEntry, 'utf-8');
 else fs.appendFileSync(LOG_FILE, logEntry, 'utf-8');
 
@@ -630,7 +630,7 @@ else fs.appendFileSync(LOG_FILE, logEntry, 'utf-8');
 function generateCombinedHTML(data, dedup, intervalMin) {
   const chs = CHANNELS.map(ch => ({ ...ch, d: data[ch.key] }));
   const chs3 = chs.filter(c => !c.d?._gc); // 三渠道
-  const gc = data.gamecenter;              // GameCenter 独立
+  const gc = data.gamecenter;              // B站 独立
   const totalAll = chs3.reduce((s, c) => s + (c.d?.total || 0), 0);
   const validAll = chs3.reduce((s, c) => s + (c.d?.valid || 0), 0);
   const invalidAll = totalAll - validAll;
@@ -770,7 +770,7 @@ function generateCombinedHTML(data, dedup, intervalMin) {
     <button class="tab" onclick="switchTab('tap')">📱 TapTap</button>
     <button class="tab" onclick="switchTab('haoyou')">🎮 好游快爆</button>
     <button class="tab" onclick="switchTab('main')">🌐 主站</button>
-    <button class="tab" onclick="switchTab('gamecenter')">🕹️ GameCenter</button>
+    <button class="tab" onclick="switchTab('gamecenter')">🕹️ B站</button>
   </div>
 
   <!-- ==================== 总览面板 ==================== -->
@@ -870,14 +870,14 @@ function generateCombinedHTML(data, dedup, intervalMin) {
       }).join('')}
       ${gc ? `
       <div class="ov-card" style="border:1px dashed #ffa726;">
-        <h3 style="color:#ffa726;">🕹️ GameCenter（独立清洗）</h3>
+        <h3 style="color:#ffa726;">🕹️ B站（独立清洗）</h3>
         <div class="mini-cards">
           <div class="mc"><div class="n" style="color:#4fc3f7">${gc.total.toLocaleString()}</div><div class="l">原始答卷</div></div>
           <div class="mc"><div class="n" style="color:#66bb6a">${gc.valid.toLocaleString()}</div><div class="l">有效答卷</div></div>
           <div class="mc"><div class="n" style="color:#ef5350">${gc.invalid.toLocaleString()}</div><div class="l">剔除无效</div></div>
           <div class="mc"><div class="n" style="color:#ce93d8">${gc.valid.toLocaleString()}</div><div class="l">直接叠加</div></div>
         </div>
-        <p style="font-size:10px;color:#ffa726;margin-top:6px;">⚠️ 独立清洗(7规则)，无手机号无法去重</p>
+        <p style="font-size:10px;color:#ffa726;margin-top:6px;">⚠️ B站问卷结构不同（无手机号/邮箱/出生年月），独立7规则清洗，答题过快阈值30s，有效回收率与其他三渠道不可直接对比</p>
       </div>` : ''}
     </div>
 
@@ -901,7 +901,7 @@ function generateCombinedHTML(data, dedup, intervalMin) {
 
   <!-- ==================== 渠道详情面板 ==================== -->
   ${chs.map(ch => {
-    if (!ch.d || !chartsData[ch.key] || ch.d._gc) return ''; // GameCenter 单独面板
+    if (!ch.d || !chartsData[ch.key] || ch.d._gc) return ''; // B站 单独面板
     const cd = chartsData[ch.key];
     const dd = ch.d;
     return `<div id="panel-${ch.key}" class="hidden">
@@ -959,7 +959,7 @@ function generateCombinedHTML(data, dedup, intervalMin) {
     </div>
   </div>`;
   }).join('')}
-  <!-- GameCenter 详情面板 -->
+  <!-- B站 详情面板 -->
   ${(() => { const gc = results.gamecenter; if (!gc) return ''; return `
   <div id="panel-gamecenter" class="hidden">
     <div class="cards">
@@ -997,7 +997,7 @@ function generateCombinedHTML(data, dedup, intervalMin) {
       <div class="chart-box"><h3>💾 运行内存</h3><div id="ram-gamecenter" style="height:280px;"></div></div>
       <div class="chart-box"><h3>🖥️ 显卡分布</h3><div id="gpu-gamecenter" style="height:280px;"></div></div>
     </div>
-    <p style="color:#8899aa;font-size:11px;margin-top:8px;">⚠️ 本渠道无手机号/邮箱/出生年月/IP，仅用5条规则清洗，无法跨渠道去重。GPU为自由文本需额外解析。</p>
+    <p style="color:#8899aa;font-size:11px;margin-top:8px;">⚠️ B站问卷结构独立：无手机号/邮箱/出生年月/IP，清洗规则为专属7条（答题过快<30s、陷阱题=射击类H、放弃参与、Q6不清楚处理器、Q7不清楚内存、Q8 PC系统选其他），无法跨渠道去重。GPU为自由文本需额外解析。有效回收率(91.6%)高于其他渠道部分原因在于规则条数较少（缺少身份核验4条），不可直接对比。</p>
   </div>`; })()}
 </div>
 
@@ -1012,7 +1012,7 @@ var refreshInterval = ${intervalMin};
 // ====== Tab switch ======
 function switchTab(key) {
   document.querySelectorAll('.tab').forEach(function(t){
-    var names={overview:'总览',haoyou:'好游快爆',tap:'TapTap',main:'主站',gamecenter:'GameCenter'};
+    var names={overview:'总览',haoyou:'好游快爆',tap:'TapTap',main:'主站',gamecenter:'B站'};
     t.classList.toggle('active', t.textContent.includes(names[key]||''));
   });
   ['overview','haoyou','tap','main','gamecenter'].forEach(function(k){
