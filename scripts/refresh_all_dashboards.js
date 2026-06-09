@@ -319,7 +319,7 @@ function cleanSurveyGC(xlsxData, label) {
     { key:'os_other',   cat:'device',   label:'Q8 PC系统选其他',   check: r => { const v = (r[8] || '').trim(); return v === 'D' || v === 'E'; } },
   ];
 
-  let total = 0, validCount = 0;
+  let total = 0, validCount = 0, anyHighEnd = 0;
   const ruleHits = {}; rules.forEach(r => { ruleHits[r.key] = 0; });
   const catHits = { quality: 0, device: 0 };
   const platform = { pc: 0, android: 0, ios: 0 };
@@ -361,7 +361,13 @@ function cleanSurveyGC(xlsxData, label) {
       else if (ram === 'F') device.ram.unknown++;
       else device.ram.skip++;
       // GPU (自由文本)
-      device.gpu[classGpuGC(row[10])]++;
+      const gpuClass = classGpuGC(row[10]);
+      device.gpu[gpuClass]++;
+
+      // 高端终筛
+      const isHighProc = proc === 'D' || proc === 'C';
+      const isHighGpu  = gpuClass === 'rtx50' || gpuClass === 'rtx40' || gpuClass === 'rtx30' || gpuClass === 'amdHigh' || gpuClass === 'intelArc';
+      if (isHighProc || isHighGpu) anyHighEnd++;
     } else {
       const cats = new Set();
       failed.forEach(k => { ruleHits[k]++; const rl = rules.find(r => r.key === k); if (rl) cats.add(rl.cat); });
@@ -372,7 +378,7 @@ function cleanSurveyGC(xlsxData, label) {
   return {
     total, valid: validCount, invalid: total - validCount,
     rate: total > 0 ? ((validCount / total) * 100).toFixed(1) : '0.0',
-    ruleHits, catHits, platform, device, updateTime: UPDATE_TIME,
+    ruleHits, catHits, platform, device, anyHighEnd, updateTime: UPDATE_TIME,
     _gc: true, // 标记为 B站
   };
 }
@@ -782,9 +788,15 @@ function generateCombinedHTML(data, dedup, intervalMin) {
       <div class="card orange"><div class="num">${rateAll}%</div><div class="label">总有效回收率</div></div>
       <div class="card" style="border:2px solid #66bb6a;background:#0f2a1a;">
         <div class="num" style="color:#66bb6a;">${(dedup.dedupDevice.anyHighEnd || 0).toLocaleString()}</div>
-        <div class="label">🎯 高端设备终筛</div>
-        <div style="font-size:10px;color:#66bb6a;">${dedup.finalTotal > 0 ? ((dedup.dedupDevice.anyHighEnd || 0) / dedup.finalTotal * 100).toFixed(1) : '0.0'}% 手机或PC高端</div>
+        <div class="label">🎯 三渠道高端终筛</div>
+        <div style="font-size:10px;color:#66bb6a;">${(dedup.finalTotal - (gc?.valid||0)) > 0 ? ((dedup.dedupDevice.anyHighEnd || 0) / (dedup.finalTotal - (gc?.valid||0)) * 100).toFixed(1) : '0.0'}% 手机或PC高端</div>
       </div>
+      ${gc ? `
+      <div class="card" style="border:2px dashed #ffa726;background:#1a1a0a;">
+        <div class="num" style="color:#ffa726;">${(gc.anyHighEnd || 0).toLocaleString()}</div>
+        <div class="label">🎯 B站高端终筛</div>
+        <div style="font-size:10px;color:#ffa726;">${gc.valid > 0 ? ((gc.anyHighEnd || 0) / gc.valid * 100).toFixed(1) : '0.0'}% (独立清洗)</div>
+      </div>` : ''}
     </div>
 
     <div class="chart-row" style="margin-bottom:18px;">
