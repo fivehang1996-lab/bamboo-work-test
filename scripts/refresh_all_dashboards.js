@@ -376,6 +376,7 @@ function dedupAcrossChannels(results) {
   let iosUsers = 0;
   let mobileHighEnd = 0;  // elite + gen3 + iOS（去重）
   let pcHighEnd = 0;      // RTX 30/40/50 + AMD高端（>= RTX 3060）
+  let anyHighEnd = 0;     // 手机或PC任一满足高端
 
   for (const [, entry] of phoneMap) {
     // ── 处理器 ──
@@ -421,12 +422,16 @@ function dedupAcrossChannels(results) {
     // ── PC高端 = RTX 30/40/50 + AMDHigh（>= RTX 3060）──
     const isHighGpu = g.includes('RTX50') || g.includes('RTX40') || g.includes('RTX30') || isAmdHighEnd(g);
     if (isHighGpu) pcHighEnd++;
+
+    // ── 高端设备终筛 = 手机或PC任一满足 ──
+    if (isHighProc || plat.includes('iOS') || isHighGpu) anyHighEnd++;
   }
   dedupDeviceClean.mobileUsers = phoneMap.size - dedupDeviceClean.proc.skip;
   dedupDeviceClean.pcUsers    = phoneMap.size - dedupDeviceClean.gpu.skip;
   dedupDeviceClean.iosUsers   = iosUsers;
   dedupDeviceClean.mobileHighEnd = mobileHighEnd;
   dedupDeviceClean.pcHighEnd     = pcHighEnd;
+  dedupDeviceClean.anyHighEnd    = anyHighEnd;
 
   const finalTotal = phoneMap.size;
 
@@ -620,6 +625,11 @@ function generateCombinedHTML(data, dedup, intervalMin) {
       <div class="card green"><div class="num">${validAll.toLocaleString()}</div><div class="label">三渠道有效答卷</div></div>
       <div class="card red"><div class="num">${invalidAll.toLocaleString()}</div><div class="label">三渠道剔除无效</div></div>
       <div class="card orange"><div class="num">${rateAll}%</div><div class="label">总有效回收率</div></div>
+      <div class="card" style="border:2px solid #66bb6a;background:#0f2a1a;">
+        <div class="num" style="color:#66bb6a;">${(dedup.dedupDevice.anyHighEnd || 0).toLocaleString()}</div>
+        <div class="label">🎯 高端设备终筛</div>
+        <div style="font-size:10px;color:#66bb6a;">${dedup.finalTotal > 0 ? ((dedup.dedupDevice.anyHighEnd || 0) / dedup.finalTotal * 100).toFixed(1) : '0.0'}% 手机或PC高端</div>
+      </div>
     </div>
 
     <div class="chart-row" style="margin-bottom:18px;">
