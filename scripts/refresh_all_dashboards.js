@@ -853,6 +853,41 @@ function generateCombinedHTML(data, dedup, intervalMin) {
       </div>
     </div>
 
+    ${gc ? `
+    <!-- B站 高端设备 KPI（独立） -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+      <div style="background:#1a2a3a;border:1px dashed #ffa726;border-radius:10px;padding:12px;">
+        <h3 style="font-size:12px;color:#ffa726;margin-bottom:8px;">📱 B站手机高端（${gc.device.proc.elite + gc.device.proc.gen3 + gc.device.proc.gen1_2 + gc.device.proc.low + gc.device.proc.unknown} 人）</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+          <div class="mc" style="background:#0a1625;">
+            <div class="n" style="color:#ce93d8;font-size:18px;">${(gc.device.proc.elite + gc.device.proc.gen3).toLocaleString()}</div>
+            <div class="l">旗舰+高端处理器</div>
+            <div style="font-size:10px;color:#ce93d8;">${(gc.device.proc.elite + gc.device.proc.gen3 + gc.device.proc.gen1_2 + gc.device.proc.low + gc.device.proc.unknown) > 0 ? ((gc.device.proc.elite + gc.device.proc.gen3) / (gc.device.proc.elite + gc.device.proc.gen3 + gc.device.proc.gen1_2 + gc.device.proc.low + gc.device.proc.unknown) * 100).toFixed(1) : '0'}%</div>
+          </div>
+          <div class="mc" style="background:#0a1625;">
+            <div class="n" style="color:#ce93d8;font-size:18px;">${(gc.device.ram.g16 + gc.device.ram.g12).toLocaleString()}</div>
+            <div class="l">大内存 12GB+</div>
+            <div style="font-size:10px;color:#ce93d8;">${(gc.device.proc.elite + gc.device.proc.gen3 + gc.device.proc.gen1_2 + gc.device.proc.low + gc.device.proc.unknown) > 0 ? ((gc.device.ram.g16 + gc.device.ram.g12) / (gc.device.proc.elite + gc.device.proc.gen3 + gc.device.proc.gen1_2 + gc.device.proc.low + gc.device.proc.unknown) * 100).toFixed(1) : '0'}%</div>
+          </div>
+        </div>
+      </div>
+      <div style="background:#1a2a3a;border:1px dashed #ffa726;border-radius:10px;padding:12px;">
+        <h3 style="font-size:12px;color:#ffa726;margin-bottom:8px;">🖥️ B站PC高端（${gc.device.gpu.rtx50 + gc.device.gpu.rtx40 + gc.device.gpu.rtx30 + gc.device.gpu.rtxOther + gc.device.gpu.amdHigh + gc.device.gpu.amdLow + gc.device.gpu.intelArc + gc.device.gpu.integrated + gc.device.gpu.garbage + gc.device.gpu.other} 人）</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+          <div class="mc" style="background:#0a1625;">
+            <div class="n" style="color:#ce93d8;font-size:18px;">${(gc.device.gpu.rtx50 + gc.device.gpu.rtx40 + gc.device.gpu.rtx30).toLocaleString()}</div>
+            <div class="l">RTX 30/40/50</div>
+            <div style="font-size:10px;color:#ce93d8;">${(gc.device.gpu.rtx50 + gc.device.gpu.rtx40 + gc.device.gpu.rtx30 + gc.device.gpu.rtxOther + gc.device.gpu.amdHigh + gc.device.gpu.amdLow + gc.device.gpu.intelArc + gc.device.gpu.integrated + gc.device.gpu.garbage + gc.device.gpu.other) > 0 ? ((gc.device.gpu.rtx50 + gc.device.gpu.rtx40 + gc.device.gpu.rtx30) / (gc.device.gpu.rtx50 + gc.device.gpu.rtx40 + gc.device.gpu.rtx30 + gc.device.gpu.rtxOther + gc.device.gpu.amdHigh + gc.device.gpu.amdLow + gc.device.gpu.intelArc + gc.device.gpu.integrated + gc.device.gpu.garbage + gc.device.gpu.other) * 100).toFixed(1) : '0'}%</div>
+          </div>
+          <div class="mc" style="background:#0a1625;">
+            <div class="n" style="color:#ce93d8;font-size:18px;">${(gc.device.gpu.amdHigh + gc.device.gpu.intelArc).toLocaleString()}</div>
+            <div class="l">AMD中高端+Intel Arc</div>
+            <div style="font-size:10px;color:#ce93d8;">${(gc.device.gpu.rtx50 + gc.device.gpu.rtx40 + gc.device.gpu.rtx30 + gc.device.gpu.rtxOther + gc.device.gpu.amdHigh + gc.device.gpu.amdLow + gc.device.gpu.intelArc + gc.device.gpu.integrated + gc.device.gpu.garbage + gc.device.gpu.other) > 0 ? ((gc.device.gpu.amdHigh + gc.device.gpu.intelArc) / (gc.device.gpu.rtx50 + gc.device.gpu.rtx40 + gc.device.gpu.rtx30 + gc.device.gpu.rtxOther + gc.device.gpu.amdHigh + gc.device.gpu.amdLow + gc.device.gpu.intelArc + gc.device.gpu.integrated + gc.device.gpu.garbage + gc.device.gpu.other) * 100).toFixed(1) : '0'}%</div>
+          </div>
+        </div>
+      </div>
+    </div>` : ''}
+
     <div class="overview-channels">
       ${chs3.map(ch => {
         if (!ch.d) return '';
