@@ -121,7 +121,7 @@ function downloadCSV(vid, label) {
     }
   }
 
-  const PAGE_SIZE = 3000;
+  const PAGE_SIZE = 500;  // 3000 会导致 TapTap 大渠道 OSS 超时
   try {
     console.log(`  拉取 ${label} (vid=${vid})...`);
     // 先查总数
@@ -813,8 +813,12 @@ function generateCombinedHTML(data, dedup, intervalMin) {
             <div style="color:#667788;font-size:18px;align-self:center;">−</div>
             <div><div style="font-size:22px;font-weight:bold;color:#ffa726;">${dedup.scalperBlocked.toLocaleString()}</div><div style="font-size:10px;color:#8899aa;">🛡️黄牛拦截</div></div>
             <div style="color:#667788;font-size:18px;align-self:center;">=</div>
-            <div><div style="font-size:28px;font-weight:bold;color:#66bb6a;">${dedup.finalTotal.toLocaleString()}</div><div style="font-size:10px;color:#8899aa;">最终可用用户</div></div>
-          </div>
+            <div><div style="font-size:22px;font-weight:bold;color:#4fc3f7;">${(dedup.finalTotal - (gc?.valid||0)).toLocaleString()}</div><div style="font-size:10px;color:#8899aa;">三渠道终筛</div></div>
+            <div style="color:#667788;font-size:18px;align-self:center;">+</div>
+            <div><div style="font-size:22px;font-weight:bold;color:#ffa726;">${(gc?.valid||0).toLocaleString()}</div><div style="font-size:10px;color:#8899aa;">B站有效</div></div>
+            <div style="color:#667788;font-size:18px;align-self:center;">=</div>
+            <div><div style="font-size:28px;font-weight:bold;color:#66bb6a;">${dedup.finalTotal.toLocaleString()}</div><div style="font-size:10px;color:#8899aa;">四渠道合计</div></div>
+            </div>
         </div>
       </div>
     </div>
